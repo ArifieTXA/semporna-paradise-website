@@ -5,9 +5,15 @@
  * width/height come from here too, so every image reserves its box and CLS
  * stays at zero (audit.py WARNs on a missing dimension).
  *
- * DESIGN.md §7: every image is generated. None is a photograph of a real,
- * named property or a real person presented as a customer. Captions on any
- * image that could read as documentary product photography say what it is.
+ * DESIGN.md §7: every GENERATED image is captioned as generated, so nothing
+ * that could read as documentary product photography passes unlabelled.
+ *
+ * The `photo-*` slots are the exception: they are real trip photographs
+ * supplied by Semporna Paradise and cleared for publication by the guests in
+ * them and by the company owner (clearance of record 2026-09-02, CONTEXT.md
+ * §5). They are the only real photographs on the site, they are always shown
+ * inside <GuestGallery>, and that component captions them as real guest
+ * photos published with permission. Everything else stays generated.
  */
 
 export interface ImageMeta {
@@ -42,6 +48,15 @@ export const IMAGES = {
   "texture-water":    { widths: [480, 960, 1024], w: 1024, h: 1024 },
   "texture-foam":     { widths: [480, 960, 1024], w: 1024, h: 1024 },
   "og-share":         { widths: [480, 960, 1440, 1920], w: 1920, h: 1088 },
+
+  /* ---- Real guest photographs (cleared 2026-09-02) ------------------- */
+  "photo-boat-group":   { widths: [480, 960, 1280], w: 1280, h: 960 },
+  "photo-bohey-dulang": { widths: [480, 960, 1280], w: 1280, h: 960 },
+  "photo-sandbar-sea":  { widths: [480, 960, 1280], w: 1280, h: 960 },
+  "photo-boat-selfie":  { widths: [480, 810], w: 810, h: 1080 },
+  "photo-heart-sandbar":{ widths: [480, 810], w: 810, h: 1080 },
+  "photo-group-sign":   { widths: [480, 810], w: 810, h: 1080 },
+  "photo-boat-thumbs":  { widths: [480, 608], w: 608, h: 1080 },
 } as const satisfies Record<string, ImageMeta>;
 
 export type ImageSlot = keyof typeof IMAGES;

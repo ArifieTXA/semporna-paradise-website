@@ -12,6 +12,8 @@ import Gated from "../Gated.astro";
 import WhatsAppCTA from "../WhatsAppCTA.astro";
 import Notice from "../Notice.astro";
 import Img from "../Img.astro";
+import GuestGallery from "../GuestGallery.astro";
+import { gallery } from "../../data/photos";
 import {
   DAY_TRIPS,
   DAYTRIP_INCLUSIONS,
@@ -139,6 +141,12 @@ const c = {
       <Notice title={c.marketTitle} tone="neutral"><p>{c.market}</p></Notice>
     </div>
   </section>
+  <GuestGallery
+    lang={lang}
+    surface="sand"
+    items={gallery(["boheyDulang", "groupSign", "boatGroup"], lang)}
+  />
+
 </Base>
 
 <style>

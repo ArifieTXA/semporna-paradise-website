@@ -1,0 +1,160 @@
+---
+/**
+ * GuestGallery — the only place on the site that shows real photographs.
+ *
+ * Every other image is generated (DESIGN.md §7) and captioned as such. The
+ * `photo-*` slots are real trip photographs supplied by Semporna Paradise and
+ * cleared for publication by the guests in them and by the company owner
+ * (clearance of record 2026-09-02, CONTEXT.md §5). Because a real photo of
+ * real guests is exactly the thing the rest of the site is careful NOT to
+ * imply, this component says so in plain words under every set.
+ *
+ * Editorial language matches the rest of the site: flat surfaces, no shadows,
+ * hairline rules, gold used decoratively only. Nothing here claims a date, a
+ * named property, an availability or a safety outcome — the photos are
+ * atmosphere, not evidence.
+ */
+import Img from "./Img.astro";
+import type { ImageSlot } from "../lib/images";
+import type { Lang } from "../lib/gated";
+
+export interface GalleryItem {
+  slot: ImageSlot;
+  /** Real alt text. Describe what is in the frame, not what it proves. */
+  alt: string;
+  /** Short line under the frame. Place or moment, never a promise. */
+  caption: string;
+}
+
+interface Props {
+  lang: Lang;
+  items: GalleryItem[];
+  /** Surface token of the band, so the section inherits the page rhythm. */
+  surface?: "light" | "sand" | "dark" | "mid";
+  eyebrow?: string;
+  title?: string;
+  lead?: string;
+}
+
+const {
+  lang,
+  items,
+  surface = "sand",
+  eyebrow,
+  title,
+  lead,
+} = Astro.props;
+
+const t = {
+  bm: {
+    eyebrow: "Galeri",
+    title: "Foto perjalanan sebenar",
+    lead: "Gambar ini dirakam semasa perjalanan kami di Semporna dan dikongsi dengan izin tetamu di dalamnya.",
+    note: "Foto sebenar tetamu Semporna Paradise. Diterbitkan dengan izin.",
+  },
+  en: {
+    eyebrow: "Gallery",
+    title: "Real photos from our trips",
+    lead: "These were taken on our own Semporna trips and are shared with the permission of the guests in them.",
+    note: "Real Semporna Paradise guest photos. Published with permission.",
+  },
+}[lang];
+
+const heading = title ?? t.title;
+const eye = eyebrow ?? t.eyebrow;
+const sub = lead ?? t.lead;
+---
+
+<section class="section--tall gallery" data-surface={surface} data-reveal>
+  <div class="wrap">
+    <div class="gallery__head">
+      <p class="eyebrow eyebrow--center">{eye}</p>
+      <h2 class="sec__title sec__title--center">{heading}</h2>
+      <p class="sec__lead sec__lead--center">{sub}</p>
+    </div>
+
+    <ul class="gallery__row" role="list">
+      {items.map((it) => (
+        <li class="gallery__item">
+          <figure class="gallery__fig">
+            <Img
+              slot={it.slot}
+              alt={it.alt}
+              sizes="(min-width: 960px) 30vw, (min-width: 600px) 45vw, 90vw"
+              class="gallery__img"
+            />
+            <figcaption class="gallery__cap">{it.caption}</figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
+
+    <p class="gallery__note">{t.note}</p>
+  </div>
+</section>
+
+<style>
+  .gallery__head {
+    text-align: center;
+    margin-bottom: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .gallery__row {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    grid-template-columns: 1fr;
+    /* Each photo keeps its own aspect. A forced ratio cropped the people out
+       of the landscape frames, and a real photo is not ours to recompose. */
+    align-items: start;
+  }
+  @media (min-width: 600px) {
+    .gallery__row { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (min-width: 960px) {
+    .gallery__row { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .gallery__fig {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Hairline frame, no shadow — same depth language as the price list. */
+  .gallery__fig :global(.gallery__img) {
+    border: 1px solid var(--color-rule-light);
+  }
+  [data-surface="dark"] .gallery__fig :global(.gallery__img),
+  [data-surface="mid"] .gallery__fig :global(.gallery__img) {
+    border-color: var(--color-rule-dark);
+  }
+
+  .gallery__cap {
+    margin-top: 1rem;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--color-rule-light);
+    font-size: var(--text-body-sm);
+    line-height: 1.6;
+    color: var(--color-ink-muted);
+  }
+  [data-surface="dark"] .gallery__cap,
+  [data-surface="mid"] .gallery__cap {
+    border-top-color: var(--color-rule-dark);
+    color: var(--color-paper-muted);
+  }
+
+  .gallery__note {
+    margin-top: clamp(2rem, 4vw, 3rem);
+    text-align: center;
+    font-size: var(--text-caption);
+    letter-spacing: 0.06em;
+    color: var(--color-ink-muted);
+  }
+  [data-surface="dark"] .gallery__note,
+  [data-surface="mid"] .gallery__note {
+    color: var(--color-paper-muted);
+  }
+</style>

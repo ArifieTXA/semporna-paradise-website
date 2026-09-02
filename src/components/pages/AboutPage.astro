@@ -9,6 +9,8 @@
 import Base from "../../layouts/Base.astro";
 import WhatsAppCTA from "../WhatsAppCTA.astro";
 import Img from "../Img.astro";
+import GuestGallery from "../GuestGallery.astro";
+import { gallery } from "../../data/photos";
 import { COMPANY } from "../../data/config";
 import { href } from "../../lib/routes";
 import type { Lang } from "../../lib/gated";
@@ -110,6 +112,12 @@ const c = {
       </div>
     </div>
   </section>
+  <GuestGallery
+    lang={lang}
+    surface="sand"
+    items={gallery(["boheyDulang", "boatSelfie", "sandbarSea"], lang)}
+  />
+
 </Base>
 
 <style>

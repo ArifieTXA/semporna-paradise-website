@@ -37,6 +37,8 @@ import Base from "../../layouts/Base.astro";
 import Gated from "../Gated.astro";
 import WhatsAppCTA from "../WhatsAppCTA.astro";
 import Img from "../Img.astro";
+import GuestGallery from "../GuestGallery.astro";
+import { gallery } from "../../data/photos";
 import { RESORTS, fromPrice } from "../../data/resorts";
 import { DAY_TRIPS } from "../../data/products";
 import { href, resortDetailPath } from "../../lib/routes";
@@ -378,6 +380,16 @@ const DURS = ["2D1N", "3D2N", "4D3N"] as const;
       </div>
     </div>
   </section>
+
+  {/* ---- 03b · Guest gallery ------------------------------------------
+      The only real photographs on the site. Cleared 2026-09-02 (CONTEXT.md §5).
+      Sits between the sand band above and the dark diving band below, so the
+      two-tone oscillation still alternates. */}
+  <GuestGallery
+    lang={lang}
+    surface="light"
+    items={gallery(["boatGroup", "heartSandbar", "sandbarSea"], lang)}
+  />
 
   {/* ---- 04 · Diving --------------------------------------------------- */}
   <section class="section--tall band-bleed band-bleed--dive" data-surface="dark" data-reveal>
