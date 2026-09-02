@@ -1,0 +1,165 @@
+---
+/**
+ * P008 — Kepercayaan & Keselamatan / Trust & Safety.
+ *
+ * Hard rules 4, 6, 7 live or die here:
+ *  - the licence `KPK/LN:9569` is a LABEL. No "berlesen penuh", no "sah
+ *    sehingga", no verification wording. B07 is unresolved.
+ *  - safety is described as process and limits, never guaranteed. No "selamat",
+ *    no "sesuai untuk semua".
+ *  - no reviews, no testimonials, no customer photos — none are consented.
+ *  - no bank account number (hard rule 5).
+ */
+import Base from "../../layouts/Base.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import Notice from "../Notice.astro";
+import Img from "../Img.astro";
+import { COMPANY, WHATSAPP } from "../../data/config";
+import { href } from "../../lib/routes";
+import type { Lang } from "../../lib/gated";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  bm: {
+    title: "Kepercayaan & Keselamatan",
+    desc: "Identiti syarikat, label lesen KPK/LN:9569, cara kami mengendalikan keselamatan sebagai proses, dan cara mengesahkan saluran rasmi Semporna Paradise.",
+    eyebrow: "Kepercayaan & keselamatan",
+    h1: "Apa yang kami boleh sahkan",
+    lead: "Halaman ini menyenaraikan perkara yang telah disahkan dan perkara yang masih dalam pengesahan. Kami tidak menyatakan sesuatu sebagai fakta sebelum ia disahkan.",
+    idHead: "Identiti syarikat",
+    idBody: "Semporna Paradise Travel & Tours Sdn Bhd ialah pengendali lawatan marin yang beroperasi dari Semporna, Sabah. Semua tempahan dikendalikan oleh pasukan kami secara terus.",
+    licHead: "Lesen",
+    licBody: `Label lesen kami ialah ${COMPANY.licenceLabel}. Kategori, status dan tempoh sah lesen sedang dalam pengesahan. Kami tidak membuat sebarang tuntutan tentang kesahan lesen sehingga pengesahan itu selesai.`,
+    safeHead: "Keselamatan sebagai proses",
+    safeBody: "Kami menerangkan proses dan had, bukan jaminan.",
+    safeList: [
+      "Jaket keselamatan disediakan untuk disewa pada lawatan pulau. Nyatakan saiz kanak-kanak yang diperlukan semasa pertanyaan.",
+      "Untuk aktiviti selam, borang perubatan, umur minimum dan pengalaman disemak untuk setiap peserta.",
+      "Perjalanan bot bergantung pada cuaca dan pasang surut. Jadual boleh berubah atas sebab operasi.",
+      "Kami tidak menjanjikan sesuatu perjalanan berjalan pada tarikh tertentu sebelum pengesahan.",
+    ],
+    payHead: "Mengesahkan saluran rasmi",
+    payBody: "Sebelum sebarang bayaran, sahkan bahawa anda berhubung dengan kami melalui salah satu nombor WhatsApp rasmi di bawah. Arahan pembayaran diberikan secara peribadi selepas sebut harga, bukan di laman web ini.",
+    mediaHead: "Gambar & ulasan",
+    mediaBody: "Gambar di laman web ini dijana untuk menunjukkan suasana kawasan Semporna. Kami tidak menyiarkan ulasan atau gambar tetamu kerana kebenaran bertulis belum dikumpulkan.",
+    contactCta: "Hubungi kami",
+    numbers: "Nombor WhatsApp rasmi",
+    imgAlt: "Jaket keselamatan oren disusun kemas dan gelung tali di atas dek bot.",
+    imgCaption: "Imej dijana. Kelengkapan keselamatan di atas bot lawatan.",
+  },
+  en: {
+    title: "Trust & Safety",
+    desc: "Company identity, the KPK/LN:9569 licence label, how we handle safety as a process, and how to verify Semporna Paradise's official channels.",
+    eyebrow: "Trust & safety",
+    h1: "What we can confirm",
+    lead: "This page lists what has been confirmed and what is still being confirmed. We do not state something as fact before it is verified.",
+    idHead: "Company identity",
+    idBody: "Semporna Paradise Travel & Tours Sdn Bhd is a marine tour operator working out of Semporna, Sabah. Every booking is handled directly by our team.",
+    licHead: "Licence",
+    licBody: `Our licence label is ${COMPANY.licenceLabel}. The licence category, status and validity period are being confirmed. We make no claim about the licence's validity until that confirmation is complete.`,
+    safeHead: "Safety as a process",
+    safeBody: "We describe the process and the limits, not a guarantee.",
+    safeList: [
+      "Life jackets are available to rent on island trips. State the children's sizes you need when you enquire.",
+      "For diving, a medical form, minimum age and experience are checked for every participant.",
+      "Boat trips depend on weather and tides. Schedules can change for operational reasons.",
+      "We do not promise a trip will run on a specific date before confirmation.",
+    ],
+    payHead: "Verifying official channels",
+    payBody: "Before any payment, confirm that you are dealing with us through one of the official WhatsApp numbers below. Payment instructions are given privately after a quote, never on this website.",
+    mediaHead: "Photos & reviews",
+    mediaBody: "Images on this website are generated to show the feel of the Semporna area. We do not publish reviews or guest photos because written consent has not been collected.",
+    contactCta: "Contact us",
+    numbers: "Official WhatsApp numbers",
+    imgAlt: "Orange life jackets stacked neatly and a coil of rope on a boat deck.",
+    imgCaption: "Generated image. Safety equipment on a tour boat.",
+  },
+}[lang];
+---
+
+<Base route="trust" lang={lang} title={c.title} description={c.desc}>
+  <section class="section--tall" data-surface="light" data-reveal>
+    <div class="wrap">
+      <p class="eyebrow">{c.eyebrow}</p>
+      <h1 class="sec__title">{c.h1}</h1>
+      <p class="sec__lead">{c.lead}</p>
+    </div>
+  </section>
+
+  <section class="section" data-surface="sand" data-reveal>
+    <div class="wrap prose">
+      <h2>{c.idHead}</h2>
+      <p>{c.idBody}</p>
+      <dl class="facts">
+        <div><dt>{lang === "bm" ? "Nama sah" : "Legal name"}</dt><dd>{COMPANY.legalName}</dd></div>
+        <div><dt>{lang === "bm" ? "Label lesen" : "Licence label"}</dt><dd>{COMPANY.licenceLabel}</dd></div>
+        <div><dt>{lang === "bm" ? "Alamat" : "Address"}</dt><dd>{COMPANY.address}</dd></div>
+      </dl>
+
+      <h2>{c.licHead}</h2>
+      <p>{c.licBody}</p>
+    </div>
+  </section>
+
+  <section class="section band-bleed" data-surface="mid" data-reveal>
+    <div class="band-bleed__grid">
+      <div class="band-bleed__text prose">
+        <h2>{c.safeHead}</h2>
+        <p>{c.safeBody}</p>
+        <ul>{c.safeList.map((s) => <li>{s}</li>)}</ul>
+      </div>
+      <figure class="band-bleed__media band-bleed__media--right">
+        <Img slot="trust-hero" alt={c.imgAlt} sizes="(min-width: 960px) 50vw, 100vw" />
+        <figcaption>{c.imgCaption}</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" data-surface="light" data-reveal>
+    <div class="wrap prose">
+      <h2>{c.payHead}</h2>
+      <p>{c.payBody}</p>
+      <Notice title={c.numbers}>
+        <p>{WHATSAPP.map((w) => w.display).join(" · ")}</p>
+      </Notice>
+
+      <h2>{c.mediaHead}</h2>
+      <p>{c.mediaBody}</p>
+
+      <div class="band-cta band-cta--start">
+        <WhatsAppCTA lang={lang} label={c.contactCta} product={lang === "bm" ? "Pertanyaan kepercayaan" : "Trust enquiry"} />
+        <a class="pill" href={href("contact", lang)}>{c.contactCta}</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .band-bleed { overflow-x: clip; }
+  .band-bleed__grid {
+    max-width: var(--page-max);
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+    display: grid;
+    gap: 3rem;
+    align-items: center;
+  }
+  @media (min-width: 768px) { .band-bleed__grid { padding-inline: 3rem; } }
+  @media (min-width: 960px) {
+    .band-bleed__grid { grid-template-columns: 1fr 1fr; gap: 4rem; }
+    .band-bleed__media--right {
+      margin-right: min(-3rem, calc((var(--page-max) - 100vw) / 2 - 4rem));
+    }
+  }
+  @media (max-width: 959px) { .band-bleed__media { margin-inline: -1.5rem; } }
+  .band-bleed__media img { width: 100%; min-height: 320px; object-fit: cover; }
+  .band-bleed__media figcaption {
+    margin-top: 0.75rem;
+    padding-inline: 1.5rem;
+    font-size: var(--text-caption);
+    color: var(--color-paper-muted);
+  }
+  @media (min-width: 960px) { .band-bleed__media figcaption { padding-inline: 0; } }
+</style>

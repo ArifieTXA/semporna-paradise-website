@@ -1,0 +1,131 @@
+---
+/**
+ * P009 — Soalan Lazim / FAQ.
+ *
+ * Native <details>/<summary> — no JS. Answers use only confirmed facts
+ * (DATA.md §9–§14). Where a fact is blocked, the answer says "confirmed at
+ * enquiry" rather than guessing. The cancellation wording is NOT stated as a
+ * hard rule here (B12 — CEO legal review open); it points to contact instead.
+ */
+import Base from "../../layouts/Base.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import { CHILD_DISCOUNT_RM, DEPOSIT_RM } from "../../data/resorts";
+import { formatRM } from "../../lib/gated";
+import { href } from "../../lib/routes";
+import type { Lang } from "../../lib/gated";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  bm: {
+    title: "Soalan Lazim",
+    desc: "Soalan lazim tentang menempah pakej Semporna Paradise — pembayaran, deposit, harga kanak-kanak, pertukaran nama, jaket keselamatan dan cara sampai ke Semporna.",
+    eyebrow: "Soalan lazim",
+    h1: "Soalan lazim",
+    lead: "Jika jawapan anda tiada di sini, hantar soalan melalui WhatsApp.",
+    cta: "Tanya soalan anda",
+    faqs: [
+      ["Bagaimana cara menempah?", "Hantar pertanyaan melalui WhatsApp dengan tarikh perjalanan dan bilangan peserta. Kami semak ketersediaan, berikan sebut harga, dan hantar arahan pembayaran secara peribadi. Tempahan disahkan selepas bayaran diterima."],
+      ["Berapa deposit?", `Deposit ialah ${formatRM(DEPOSIT_RM)} seorang. Baki dibayar mengikut jadual yang diberikan dalam sebut harga anda.`],
+      ["Ada harga khas untuk kanak-kanak?", `Kanak-kanak 1 hingga 6 tahun mendapat potongan ${formatRM(CHILD_DISCOUNT_RM)} daripada harga pakej dewasa. Tetamu 7 tahun ke atas membayar harga penuh. Peraturan untuk bayi bawah 1 tahun disahkan semasa pertanyaan.`],
+      ["Boleh tukar nama peserta?", "Boleh. Pertukaran nama dibenarkan tanpa caj sehingga 14 hari sebelum perjalanan."],
+      ["Apa yang termasuk dalam pakej resort?", "Setiap pakej resort termasuk penginapan, makan (sarapan, tengah hari, malam), dan pengangkutan lapangan terbang Tawau serta bot. Sebahagian resort turut menyertakan permit jeti dan bot. Butiran penuh ada pada halaman setiap resort."],
+      ["Jaket keselamatan termasuk?", "Tidak. Jaket keselamatan perlu disewa dan dikenakan setiap hari untuk lawatan pulau. Kadar disahkan semasa pertanyaan."],
+      ["Bagaimana dasar pembatalan?", "Terma pembatalan dan penangguhan disahkan secara bertulis semasa tempahan. Hubungi kami untuk butiran terkini sebelum membuat bayaran."],
+      ["Perlu sijil selam untuk Sipadan?", "Sijil selam dan pengalaman disemak untuk setiap peserta. Sipadan ialah kawasan dilindungi dengan permit terhad — kami tidak menjanjikan permit atau tarikh sebelum pengesahan."],
+      ["Bagaimana cara sampai ke Semporna?", "Kebanyakan tetamu terbang ke Lapangan Terbang Tawau, kemudian pemindahan darat ke jeti Semporna, dan seterusnya bot ke resort. Pemindahan lapangan terbang dan bot termasuk dalam pakej resort."],
+      ["Harga di laman web ini muktamad?", "Harga di laman web adalah harga rujukan. Harga boleh berubah dan disahkan semasa anda membuat pertanyaan."],
+    ],
+  },
+  en: {
+    title: "FAQ",
+    desc: "Common questions about booking with Semporna Paradise — payment, deposit, child pricing, name changes, life jackets and getting to Semporna.",
+    eyebrow: "FAQ",
+    h1: "Frequently asked questions",
+    lead: "If your answer is not here, send the question on WhatsApp.",
+    cta: "Ask your question",
+    faqs: [
+      ["How do I book?", "Send an enquiry on WhatsApp with your travel dates and party size. We check availability, send a quote, and give payment instructions privately. The booking is confirmed once payment is received."],
+      ["How much is the deposit?", `The deposit is ${formatRM(DEPOSIT_RM)} per person. The balance is paid on the schedule given in your quote.`],
+      ["Is there a child price?", `Children aged 1 to 6 get ${formatRM(CHILD_DISCOUNT_RM)} off the adult package price. Guests 7 and above pay the full price. The rule for infants under 1 is confirmed at enquiry.`],
+      ["Can I change a traveller's name?", "Yes. Name changes are allowed at no charge up to 14 days before the trip."],
+      ["What is included in a resort package?", "Every resort package includes accommodation, meals (breakfast, lunch, dinner), and Tawau airport and boat transport. Some resorts also include the jetty and boat permit. Full detail is on each resort page."],
+      ["Is the life jacket included?", "No. The life jacket must be rented and is charged per day for island trips. The rate is confirmed at enquiry."],
+      ["What is the cancellation policy?", "Cancellation and postponement terms are confirmed in writing at the time of booking. Contact us for the current detail before making a payment."],
+      ["Do I need a dive certification for Sipadan?", "Dive certification and experience are checked for every participant. Sipadan is a protected site with a limited permit quota — we do not promise a permit or a date before confirmation."],
+      ["How do I get to Semporna?", "Most guests fly to Tawau Airport, then take a land transfer to the Semporna jetty, then a boat to the resort. Airport and boat transfers are included in resort packages."],
+      ["Are the prices on this website final?", "Prices on the website are reference prices. They may change and are confirmed when you make an enquiry."],
+    ],
+  },
+}[lang];
+---
+
+<Base route="faq" lang={lang} title={c.title} description={c.desc}>
+  <section class="section--tall" data-surface="light" data-reveal>
+    <div class="wrap">
+      <p class="eyebrow">{c.eyebrow}</p>
+      <h1 class="sec__title">{c.h1}</h1>
+      <p class="sec__lead">{c.lead}</p>
+    </div>
+  </section>
+
+  <section class="section" data-surface="sand" data-reveal>
+    <div class="wrap">
+      <div class="faq">
+        {c.faqs.map(([q, a]) => (
+          <details class="faq__item">
+            <summary>{q}</summary>
+            <p>{a}</p>
+          </details>
+        ))}
+      </div>
+      <div class="band-cta band-cta--start">
+        <WhatsAppCTA lang={lang} label={c.cta} product={lang === "bm" ? "Soalan lazim" : "FAQ question"} />
+        <a class="pill" href={href("contact", lang)}>{lang === "bm" ? "Hubungi" : "Contact"}</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .faq { max-width: 60rem; }
+  .faq__item { border-top: 1px solid var(--color-rule-light); }
+  .faq__item:last-of-type { border-bottom: 1px solid var(--color-rule-light); }
+  .faq__item summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 1.35rem 2.5rem 1.35rem 0;
+    position: relative;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: var(--text-subheading);
+    min-height: 44px;
+  }
+  .faq__item summary::-webkit-details-marker { display: none; }
+  .faq__item summary::after {
+    content: "";
+    position: absolute;
+    right: 0.25rem;
+    top: 1.6rem;
+    width: 12px;
+    height: 12px;
+    border-right: 1.5px solid var(--color-ink-muted);
+    border-bottom: 1.5px solid var(--color-ink-muted);
+    transform: rotate(45deg);
+    transition: transform var(--dur-micro) var(--ease-micro);
+  }
+  .faq__item[open] summary::after { transform: rotate(225deg); }
+  .faq__item summary:focus-visible { outline: 2px solid var(--color-deep); outline-offset: 3px; }
+  .faq__item p {
+    margin: 0;
+    padding: 0 2rem 1.5rem 0;
+    font-size: var(--text-body-sm);
+    line-height: 1.75;
+    max-width: 62ch;
+    color: var(--color-ink-muted);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .faq__item summary::after { transition-duration: 0.01ms; }
+  }
+</style>

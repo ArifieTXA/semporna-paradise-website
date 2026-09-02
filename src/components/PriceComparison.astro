@@ -1,0 +1,445 @@
+---
+/**
+ * The resort price comparison table — DESIGN.md §5.5. The feature v1 never had.
+ *
+ *  - real <table> with <caption>, <th scope>. No ARIA grid theatre.
+ *  - sticky header row + sticky first column (CSS position: sticky).
+ *  - sort by "from" price, filter by room type — vanilla JS, one small island.
+ *  - every price cell renders through <Gated>. No literal in the markup.
+ *  - below 768px the same data reflows to one card per resort, never a
+ *    horizontal scroll trap.
+ *  - every row carries its resort's immutable SPTT- code into WhatsApp.
+ *
+ * Without JS the full table still renders, sorted cheapest-first; the toolbar
+ * is hidden because its controls would be inert.
+ */
+import Gated from "./Gated.astro";
+import {
+  RESORTS,
+  DURATIONS,
+  DURATION_LABELS,
+  fromPrice,
+  productCode,
+  type Duration,
+} from "../data/resorts";
+import { waLink } from "../lib/whatsapp";
+import type { Lang } from "../lib/gated";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+const t = {
+  bm: {
+    caption: "Harga pakej resort setiap orang, mengikut tempoh menginap.",
+    resortCol: "Resort & bilik",
+    roomFilter: "Jenis bilik",
+    all: "Semua",
+    sortLabel: "Susun ikut harga",
+    sortAsc: "Termurah dahulu",
+    sortDesc: "Termahal dahulu",
+    from: "Dari",
+    ask: "Tanya di WhatsApp",
+    perPerson: "seorang",
+    none: "Tiada resort sepadan dengan tapisan ini.",
+  },
+  en: {
+    caption: "Resort package prices per person, by length of stay.",
+    resortCol: "Resort & room",
+    roomFilter: "Room type",
+    all: "All",
+    sortLabel: "Sort by price",
+    sortAsc: "Lowest first",
+    sortDesc: "Highest first",
+    from: "From",
+    ask: "Ask on WhatsApp",
+    perPerson: "per person",
+    none: "No resort matches this filter.",
+  },
+}[lang];
+
+// Sorted cheapest-first for the no-JS default. A null "from" sinks to the end.
+const rows = [...RESORTS].sort((a, b) => {
+  const pa = fromPrice(a);
+  const pb = fromPrice(b);
+  if (pa === null) return 1;
+  if (pb === null) return -1;
+  return pa - pb;
+});
+
+const roomTypes = Array.from(new Set(RESORTS.map((r) => r.room)));
+
+function waFor(r: (typeof RESORTS)[number]) {
+  // Carry the cheapest verified duration's full immutable code; fall back to
+  // the 2D1N code so the message always names a real SPTT- product.
+  const dur = (DURATIONS.find((d) => r.prices[d] !== null) ?? "2D1N") as Duration;
+  return waLink(
+    { code: productCode(r, dur), product: `${r.name} — ${r.room}` },
+    lang,
+  );
+}
+---
+
+<div class="pc" data-price-compare>
+  <div class="pc__toolbar" hidden>
+    <label class="pc__field">
+      <span>{t.roomFilter}</span>
+      <select data-room>
+        <option value="">{t.all}</option>
+        {roomTypes.map((rt) => <option value={rt}>{rt}</option>)}
+      </select>
+    </label>
+    <fieldset class="pc__sort">
+      <legend>{t.sortLabel}</legend>
+      <button type="button" data-sort="asc" aria-pressed="true">{t.sortAsc}</button>
+      <button type="button" data-sort="desc" aria-pressed="false">{t.sortDesc}</button>
+    </fieldset>
+  </div>
+
+  <p class="pc__empty" data-empty role="status" hidden>{t.none}</p>
+
+  {/* ---- Wide: a real table ---- */}
+  <div class="pc__scroll">
+    <table class="pc__table">
+      <caption>{t.caption}</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="pc__rhead">{t.resortCol}</th>
+          {DURATIONS.map((d) => (
+            <th scope="col" class="pc__dhead">{DURATION_LABELS[d][lang]}</th>
+          ))}
+          <th scope="col"><span class="u-sr">{t.ask}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr data-row data-room={r.room} data-from={fromPrice(r) ?? ""}>
+            <th scope="row" class="pc__rname">
+              <span class="pc__rtitle">{r.name}</span>
+              <span class="pc__rroom">{r.room}</span>
+            </th>
+            {DURATIONS.map((d) => (
+              <td class="pc__price">
+                <Gated
+                  value={r.prices[d]}
+                  kind="price"
+                  blocker={r.blockers?.[0]}
+                  lang={lang}
+                />
+              </td>
+            ))}
+            <td class="pc__cta">
+              <a href={waFor(r)} target="_blank" rel="noopener noreferrer">
+                {t.ask}
+                <span class="u-sr"> — {r.name} {r.room}</span>
+              </a>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  {/* ---- Narrow: one card per resort ---- */}
+  <ul class="pc__cards">
+    {rows.map((r) => (
+      <li class="pc__card" data-card data-room={r.room} data-from={fromPrice(r) ?? ""}>
+        <div class="pc__card-head">
+          <span class="pc__rtitle">{r.name}</span>
+          <span class="pc__rroom">{r.room}</span>
+        </div>
+        <dl class="pc__card-prices">
+          {DURATIONS.map((d) => (
+            <div>
+              <dt>{DURATION_LABELS[d][lang]}</dt>
+              <Gated
+                as="dd"
+                value={r.prices[d]}
+                kind="price"
+                blocker={r.blockers?.[0]}
+                lang={lang}
+              />
+            </div>
+          ))}
+        </dl>
+        <a class="pc__card-cta" href={waFor(r)} target="_blank" rel="noopener noreferrer">
+          {t.ask}<span class="u-sr"> — {r.name} {r.room}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<script>
+  type SortDir = "asc" | "desc";
+
+  document.querySelectorAll<HTMLElement>("[data-price-compare]").forEach((root) => {
+    const toolbar = root.querySelector<HTMLElement>(".pc__toolbar");
+    const roomSel = root.querySelector<HTMLSelectElement>("[data-room]");
+    const sortBtns = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-sort]"));
+    const empty = root.querySelector<HTMLElement>("[data-empty]");
+    const emptyMsg = (empty?.textContent ?? "").trim();
+    const tbody = root.querySelector<HTMLTableSectionElement>(".pc__table tbody");
+    const cardList = root.querySelector<HTMLElement>(".pc__cards");
+    if (!toolbar || !roomSel || !tbody || !cardList) return;
+
+    toolbar.hidden = false;
+    // Keep the status region rendered and empty so it announces the moment a
+    // filter drops the table to zero rows. The SSR `hidden` only guarded the
+    // no-JS case, where every resort is shown and the message would be wrong.
+    if (empty) {
+      empty.hidden = false;
+      empty.textContent = "";
+    }
+
+    let dir: SortDir = "asc";
+
+    const fromVal = (el: Element) => {
+      const raw = (el as HTMLElement).dataset.from;
+      return raw ? Number(raw) : Number.POSITIVE_INFINITY;
+    };
+
+    function apply() {
+      const room = roomSel!.value;
+
+      const order = (a: Element, b: Element) => {
+        const d = fromVal(a) - fromVal(b);
+        return dir === "asc" ? d : -d;
+      };
+
+      let visible = 0;
+      for (const [list, sel] of [
+        [tbody!, "[data-row]"],
+        [cardList!, "[data-card]"],
+      ] as const) {
+        const items = Array.from(list.querySelectorAll<HTMLElement>(sel));
+        items.sort(order).forEach((el) => list.appendChild(el));
+        items.forEach((el) => {
+          const show = !room || el.dataset.room === room;
+          el.hidden = !show;
+          if (list === tbody && show) visible++;
+        });
+      }
+
+      if (empty) empty.textContent = visible > 0 ? "" : emptyMsg;
+    }
+
+    roomSel.addEventListener("change", apply);
+    sortBtns.forEach((btn) =>
+      btn.addEventListener("click", () => {
+        dir = (btn.dataset.sort as SortDir) ?? "asc";
+        sortBtns.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+        apply();
+      }),
+    );
+
+    apply();
+  });
+</script>
+
+<style>
+  .u-sr {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  .pc { margin-top: 3rem; }
+
+  /* ---- Toolbar ---- */
+  .pc__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1.5rem 2rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-rule-light);
+  }
+  .pc__field { display: flex; flex-direction: column; gap: 0.5rem; }
+  .pc__field span,
+  .pc__sort legend {
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+  }
+  .pc__field select {
+    min-height: 44px;
+    padding: 0 2.25rem 0 0.875rem;
+    border: 1.5px solid var(--color-border-light);
+    border-radius: var(--radius-card);
+    background: var(--color-snow);
+    color: var(--color-ink);
+    font: inherit;          /* 16px — a smaller size makes iOS zoom on focus */
+  }
+  .pc__sort {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .pc__sort legend { float: left; width: 100%; margin-bottom: 0.5rem; }
+  .pc__sort button {
+    min-height: 44px;
+    padding: 0 1.125rem;
+    border: 1.5px solid var(--color-border-light);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-ink);
+    font: inherit;
+    font-size: var(--text-body-sm);
+    cursor: pointer;
+    transition: background-color var(--dur-micro) var(--ease-micro),
+      color var(--dur-micro) var(--ease-micro);
+  }
+  .pc__sort button[aria-pressed="true"] {
+    background: var(--color-deep);
+    color: var(--color-paper);
+    border-color: var(--color-deep);
+  }
+
+  .pc__empty {
+    margin: 2rem 0;
+    min-height: 1.5rem;
+    color: var(--color-ink-muted);
+  }
+  /* Rendered but empty while there are rows — collapse it so there is no gap. */
+  .pc__empty:empty {
+    margin: 0;
+    min-height: 0;
+  }
+
+  /* ---- Wide table ---- */
+  .pc__scroll { overflow-x: auto; }
+  .pc__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+  .pc__table caption {
+    text-align: left;
+    margin-bottom: 1rem;
+    font-size: var(--text-body-sm);
+    color: var(--color-ink-muted);
+  }
+  .pc__table th,
+  .pc__table td {
+    padding: 1.05rem 1rem;
+    text-align: right;
+    border-bottom: 1px solid var(--color-rule-light);
+  }
+  .pc__table thead th {
+    position: sticky;
+    top: var(--hdr-h, 8rem);  /* tracks the sticky header as it shrinks on scroll */
+    z-index: 4;               /* over the table body only — the header is z-index 50 */
+    background: var(--color-snow);
+    border-bottom: 1px solid var(--color-border-light);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+  }
+  .pc__rhead,
+  .pc__rname {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    text-align: left;
+    background: var(--color-snow);
+  }
+  .pc__table thead .pc__rhead { z-index: 5; }
+  .pc__rname { font-weight: 400; }
+  .pc__rtitle {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--text-subheading);
+    line-height: 1.2;
+  }
+  .pc__rroom {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+  }
+  .pc__price { font-size: var(--text-body); }
+  .pc__cta a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 1rem;
+    border: 1.5px solid var(--color-border-light);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color var(--dur-micro) var(--ease-micro),
+      color var(--dur-micro) var(--ease-micro);
+  }
+  .pc__cta a:hover { background: var(--color-deep); color: var(--color-paper); }
+
+  /* ---- Narrow cards ---- */
+  .pc__cards { display: none; list-style: none; margin: 0; padding: 0; }
+  .pc__card {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--color-rule-light);
+  }
+  .pc__card-head { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; }
+  .pc__card-prices {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin: 1.25rem 0 1.5rem;
+  }
+  .pc__card-prices dt {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+    margin-bottom: 0.35rem;
+  }
+  .pc__card-prices dd {
+    margin: 0;
+    font-size: var(--text-body);
+    font-variant-numeric: tabular-nums;
+  }
+  .pc__card-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 1.5rem;
+    border: 1.5px solid var(--color-border-light);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  @media (max-width: 767px) {
+    .pc__scroll { display: none; }
+    .pc__cards { display: block; }
+    .pc__toolbar { gap: 1rem 1.5rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pc__sort button,
+    .pc__cta a { transition-duration: 0.01ms; }
+  }
+</style>

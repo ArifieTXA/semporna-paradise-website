@@ -1,0 +1,185 @@
+---
+/**
+ * P002 — Semua Pakej / All Packages.
+ *
+ * The catalogue page. Its centre of gravity is the price comparison table
+ * (DESIGN.md §5.5) — the one thing v1 never had. Everything else on the page
+ * exists to frame that table honestly: what every price includes, what it
+ * never includes, and the two conditions the business must always state
+ * (price confirmed at enquiry, availability on request).
+ */
+import Base from "../../layouts/Base.astro";
+import PriceComparison from "../PriceComparison.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import Notice from "../Notice.astro";
+import { INCLUSION_LABELS } from "../../data/resorts";
+import { DAY_TRIPS, DIVE_PRODUCTS } from "../../data/products";
+import { CHILD_DISCOUNT_RM, DEPOSIT_RM } from "../../data/resorts";
+import { href } from "../../lib/routes";
+import { formatRM } from "../../lib/gated";
+import type { Lang } from "../../lib/gated";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  bm: {
+    title: "Semua Pakej",
+    desc: "Bandingkan pakej resort Semporna mengikut tempoh, perkara termasuk dan harga. Harga setiap orang disenaraikan penuh. Teruskan di WhatsApp untuk mengesahkan tempahan.",
+    eyebrow: "Katalog",
+    h1: "Semua pakej, satu perbandingan",
+    lead: "Bandingkan pakej resort mengikut tempoh menginap, perkara termasuk dan harga setiap orang. Lawatan harian dan produk selam ada di halaman masing-masing.",
+    pairTitle: "Apa yang setiap harga liputi",
+    inclTitle: "Setiap pakej resort termasuk",
+    exclTitle: "Tidak termasuk dalam mana-mana pakej",
+    incl: ["Penginapan di resort atas air atau pulau", "Makan — sarapan, tengah hari, malam", "Pengangkutan lapangan terbang Tawau dan bot"],
+    excl: ["Tambang penerbangan ke Tawau", "Sewa jaket keselamatan untuk lawatan pulau", "Aktiviti tambahan seperti seawalking atau bot lutsinar", "Perbelanjaan peribadi di pulau"],
+    inclNote: "Sebahagian resort turut menyertakan permit jeti dan bot, atau zipline. Butiran penuh setiap resort ada pada tabel di bawah dan pada halaman resort.",
+    tableHead: "Perbandingan harga resort",
+    tableLead: "Harga setiap orang, dewasa 7 tahun ke atas. Susun ikut harga atau tapis ikut jenis bilik.",
+    condTitle: "Dua perkara yang perlu anda tahu",
+    cond1: "Harga di halaman ini adalah harga rujukan. Harga boleh berubah dan disahkan semasa anda membuat pertanyaan.",
+    cond2: `Ketersediaan bilik, permit dan slot adalah atas permintaan. Deposit ${formatRM(DEPOSIT_RM)} seorang. Kanak-kanak 1 hingga 6 tahun mendapat potongan ${formatRM(CHILD_DISCOUNT_RM)}.`,
+    other: "Produk lain",
+    otherLead: "Lawatan harian dan selam tidak dibandingkan dalam tabel resort di atas.",
+    dayTripsLink: "Lihat lawatan harian",
+    divingLink: "Lihat selam & PADI",
+    ctaLabel: "Tanya tentang pakej",
+    ctaProduct: "Pakej resort",
+  },
+  en: {
+    title: "All Packages",
+    desc: "Compare Semporna resort packages by length of stay, inclusions and price. Per-person prices are listed in full. Continue on WhatsApp to confirm a booking.",
+    eyebrow: "Catalogue",
+    h1: "Every package, one comparison",
+    lead: "Compare resort packages by length of stay, what is included and the per-person price. Day trips and diving products have their own pages.",
+    pairTitle: "What every price covers",
+    inclTitle: "Every resort package includes",
+    exclTitle: "Not included in any package",
+    incl: ["Accommodation at a water or island resort", "Meals — breakfast, lunch, dinner", "Tawau airport and boat transport"],
+    excl: ["Airfare to Tawau", "Life jacket rental for island trips", "Add-on activities such as seawalking or the transparent boat", "Personal spending on the islands"],
+    inclNote: "Some resorts also include the jetty and boat permit, or a zipline. Full per-resort detail is in the table below and on each resort page.",
+    tableHead: "Resort price comparison",
+    tableLead: "Prices are per person, adult 7 years and above. Sort by price or filter by room type.",
+    condTitle: "Two things to know",
+    cond1: "Prices on this page are reference prices. Prices may change and are confirmed when you make an enquiry.",
+    cond2: `Rooms, permits and slots are on request. Deposit is ${formatRM(DEPOSIT_RM)} per person. Children aged 1 to 6 get ${formatRM(CHILD_DISCOUNT_RM)} off.`,
+    other: "Other products",
+    otherLead: "Day trips and diving are not compared in the resort table above.",
+    dayTripsLink: "See day trips",
+    divingLink: "See diving & PADI",
+    ctaLabel: "Ask about a package",
+    ctaProduct: "Resort package",
+  },
+}[lang];
+---
+
+<Base route="packages" lang={lang} title={c.title} description={c.desc}>
+  <section class="section--tall" data-surface="dark" data-reveal>
+    <div class="wrap">
+      <p class="eyebrow">{c.eyebrow}</p>
+      <h1 class="sec__title">{c.h1}</h1>
+      <p class="sec__lead">{c.lead}</p>
+    </div>
+  </section>
+
+  <section class="section" data-surface="sand" data-reveal>
+    <div class="wrap">
+      <h2 class="sec__title">{c.pairTitle}</h2>
+      <div class="pair">
+        <div class="pair__col">
+          <h3>{c.inclTitle}</h3>
+          <ul>{c.incl.map((i) => <li>{i}</li>)}</ul>
+        </div>
+        <div class="pair__col">
+          <h3>{c.exclTitle}</h3>
+          <ul>{c.excl.map((i) => <li>{i}</li>)}</ul>
+        </div>
+      </div>
+      <p class="pair-note">{c.inclNote}</p>
+    </div>
+  </section>
+
+  <section class="section--tall" data-surface="light" data-reveal>
+    <div class="wrap">
+      <p class="eyebrow">{c.tableHead}</p>
+      <h2 class="sec__title">{c.tableHead}</h2>
+      <p class="sec__lead">{c.tableLead}</p>
+      <PriceComparison lang={lang} />
+    </div>
+  </section>
+
+  <section class="section" data-surface="sand" data-reveal>
+    <div class="wrap">
+      <Notice title={c.condTitle}>
+        <p>{c.cond1}</p>
+        <p>{c.cond2}</p>
+      </Notice>
+    </div>
+  </section>
+
+  <section class="section" data-surface="light" data-reveal>
+    <div class="wrap">
+      <p class="eyebrow">{c.other}</p>
+      <h2 class="sec__title">{c.other}</h2>
+      <p class="sec__lead">{c.otherLead}</p>
+      <div class="links">
+        <a class="links__a" href={href("dayTrips", lang)}>
+          {c.dayTripsLink}
+          <span>{DAY_TRIPS.length}</span>
+        </a>
+        <a class="links__a" href={href("diving", lang)}>
+          {c.divingLink}
+          <span>{DIVE_PRODUCTS.length}</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" data-surface="dark" data-reveal>
+    <div class="wrap band-cta band-cta--start">
+      <WhatsAppCTA lang={lang} label={c.ctaLabel} product={c.ctaProduct} />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .pair-note {
+    margin-top: 2rem;
+    font-size: var(--text-body-sm);
+    line-height: 1.7;
+    color: var(--color-ink-muted);
+    max-width: 60ch;
+  }
+  .links { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2.5rem; }
+  .links__a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 44px;
+    padding: 0 1.5rem;
+    border: 1.5px solid var(--color-border-light);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    text-decoration: none;
+    transition: background-color var(--dur-micro) var(--ease-micro),
+      color var(--dur-micro) var(--ease-micro);
+  }
+  .links__a:hover { background: var(--color-deep); color: var(--color-paper); }
+  .links__a span {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.35rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-parchment);
+    color: var(--color-ink);
+    font-size: 0.6875rem;
+  }
+  .band-cta--start { justify-content: flex-start; }
+</style>

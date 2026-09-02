@@ -1,0 +1,11 @@
+---
+import ResortDetailPage from "../../components/pages/ResortDetailPage.astro";
+import { RESORTS } from "../../data/resorts";
+
+export function getStaticPaths() {
+  return RESORTS.map((r) => ({ params: { slug: r.slug }, props: { resort: r } }));
+}
+
+const { resort } = Astro.props;
+---
+<ResortDetailPage lang="bm" resort={resort} />

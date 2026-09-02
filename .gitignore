@@ -1,0 +1,15 @@
+# build output
+dist/
+.astro/
+
+# deps
+node_modules/
+
+# editor / os
+.DS_Store
+
+# vercel
+.vercel/
+
+# raw working images (not needed for build)
+img-raw/

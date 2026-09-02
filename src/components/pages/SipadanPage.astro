@@ -1,0 +1,148 @@
+---
+/**
+ * P027 — Sipadan. The deepest point on the depth ramp: `abyss` surface.
+ *
+ * Verification-first (B09). Sipadan is a protected site with a daily permit
+ * quota outside this company's control. This page NEVER promises a permit or a
+ * date — it explains the process and routes to an assisted enquiry.
+ */
+import Base from "../../layouts/Base.astro";
+import Gated from "../Gated.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import Notice from "../Notice.astro";
+import Img from "../Img.astro";
+import { DIVE_PRODUCTS } from "../../data/products";
+import { href } from "../../lib/routes";
+import type { Lang } from "../../lib/gated";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const sipadan = DIVE_PRODUCTS.find((p) => p.slug === "sipadan")!;
+
+const c = {
+  bm: {
+    title: "Maklumat Sipadan",
+    desc: "Cara pertanyaan untuk menyelam di Sipadan melalui Semporna Paradise. Sipadan ialah kawasan dilindungi dengan permit terhad — kami tidak menjanjikan permit atau tarikh.",
+    eyebrow: "Sipadan",
+    h1: "Sipadan bermula dengan pengesahan",
+    lead: "Sipadan ialah kawasan dilindungi. Bilangan permit setiap hari ditetapkan oleh pihak berkuasa taman, bukan oleh kami.",
+    priceLabel: "Harga rujukan",
+    perPerson: "seorang",
+    stepsHead: "Bagaimana pertanyaan Sipadan berjalan",
+    steps: [
+      "Hantar tarikh yang dikehendaki, status sijil selam, dan bilangan peserta.",
+      "Kami semak kemungkinan permit dan slot bot untuk tarikh itu.",
+      "Jika ada ruang, kami berikan sebut harga dan langkah seterusnya.",
+      "Permit hanya disahkan selepas bayaran dan kelulusan taman.",
+    ],
+    permitTitle: "Permit & ketersediaan",
+    permit: "Kami tidak boleh menjanjikan permit Sipadan atau tarikh tertentu sebelum pengesahan. Rancang tarikh anjal dan pertanyaan awal.",
+    eligTitle: "Kelayakan",
+    elig: "Sijil selam dan pengalaman disemak untuk setiap peserta. Butiran bilangan selaman dan peralatan disahkan semasa pertanyaan.",
+    ask: "Mula pertanyaan Sipadan",
+    diveLink: "Semua pakej selam",
+  },
+  en: {
+    title: "Sipadan Information",
+    desc: "How a Sipadan diving enquiry works through Semporna Paradise. Sipadan is a protected site with a limited permit quota — we do not promise a permit or a date.",
+    eyebrow: "Sipadan",
+    h1: "Sipadan starts with confirmation",
+    lead: "Sipadan is a protected site. The number of permits each day is set by the park authority, not by us.",
+    priceLabel: "Reference price",
+    perPerson: "per person",
+    stepsHead: "How a Sipadan enquiry works",
+    steps: [
+      "Send your preferred dates, your dive certification status, and the number of participants.",
+      "We check the permit likelihood and boat slot for those dates.",
+      "If there is space, we send a quote and the next steps.",
+      "A permit is only confirmed after payment and park approval.",
+    ],
+    permitTitle: "Permit & availability",
+    permit: "We cannot promise a Sipadan permit or a specific date before confirmation. Plan flexible dates and enquire early.",
+    eligTitle: "Eligibility",
+    elig: "Dive certification and experience are checked for every participant. Dive count and equipment detail are confirmed at enquiry.",
+    ask: "Start a Sipadan enquiry",
+    diveLink: "All diving packages",
+  },
+}[lang];
+
+const imgAlt = lang === "bm"
+  ? "Dinding batu gelap menjunam ke air biru gelap yang dalam, cahaya jauh di atas."
+  : "A dark rock wall dropping into deep dark-blue water, light far above.";
+---
+
+<Base route="sipadan" lang={lang} title={c.title} description={c.desc}>
+  <section class="section--tall" data-surface="abyss" data-reveal>
+    <div class="wrap ph2">
+      <div>
+        <p class="eyebrow">{c.eyebrow}</p>
+        <h1 class="sec__title">{c.h1}</h1>
+        <p class="sec__lead">{c.lead}</p>
+        <p class="ref">
+          {c.priceLabel}:
+          <Gated value={sipadan.price} kind="price" blocker={sipadan.blockers[0]} lang={lang} />
+          {sipadan.price !== null && <span> / {c.perPerson}</span>}
+        </p>
+        <div class="band-cta band-cta--start">
+          <WhatsAppCTA lang={lang} code={sipadan.code} product="Sipadan" label={c.ask} />
+          <a class="pill" href={href("diving", lang)}>{c.diveLink}</a>
+        </div>
+      </div>
+      <figure class="ph2__media">
+        <Img slot="sipadan-deep" alt={imgAlt} hero sizes="(min-width: 900px) 45vw, 100vw" />
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" data-surface="dark" data-reveal>
+    <div class="wrap">
+      <h2 class="sec__title">{c.stepsHead}</h2>
+      <ol class="steps">
+        {c.steps.map((s, i) => (
+          <li class="steps__item">
+            <span class="steps__n" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+            <p>{s}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" data-surface="mid" data-reveal>
+    <div class="wrap notices">
+      <Notice title={c.permitTitle}><p>{c.permit}</p></Notice>
+      <Notice title={c.eligTitle} tone="neutral"><p>{c.elig}</p></Notice>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .ph2 { display: grid; gap: 3rem; }
+  @media (min-width: 900px) {
+    .ph2 { grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); align-items: center; gap: 4rem; }
+  }
+  .ph2__media { margin: 0; }
+  .ph2__media :global(.img img) { border-radius: var(--radius-card); }
+
+  .ref {
+    margin-top: 1.5rem;
+    font-size: var(--text-body);
+    font-variant-numeric: tabular-nums;
+  }
+  .ref span { color: var(--color-paper-muted); font-size: var(--text-body-sm); }
+
+  .steps { list-style: none; margin: 2.5rem 0 0; padding: 0; display: grid; gap: 0; }
+  .steps__item {
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--color-rule-dark);
+    align-items: baseline;
+  }
+  .steps__item:last-child { border-bottom: 1px solid var(--color-rule-dark); }
+  .steps__n { font-size: var(--text-caption); font-weight: 600; letter-spacing: 0.14em; color: var(--color-gold-soft); }
+  .steps__item p { font-size: var(--text-body); line-height: 1.65; max-width: 52ch; }
+  .notices { display: grid; gap: 2rem; }
+</style>

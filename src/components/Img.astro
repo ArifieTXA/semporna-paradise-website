@@ -1,0 +1,55 @@
+---
+/**
+ * One responsive <picture>. AVIF then WebP then the <img> fallback, all from
+ * the manifest in src/lib/images.ts. Intrinsic width/height are always set
+ * (audit.py WARNs otherwise, and it is real CLS).
+ *
+ * `hero` swaps loading="lazy" for eager + fetchpriority="high" — use it only on
+ * the one image above the fold per page (DESIGN.md §7).
+ *
+ * Every generated image needs a real `alt`. A decorative plate passes alt="".
+ */
+import { IMAGES, srcset, fallbackSrc, type ImageSlot } from "../lib/images";
+
+interface Props {
+  slot: ImageSlot;
+  alt: string;
+  sizes?: string;
+  hero?: boolean;
+  class?: string;
+  /** Override the rendered aspect box (object-fit: cover crops to it). */
+  ratio?: string;
+}
+
+const { slot, alt, sizes = "100vw", hero = false, class: className = "", ratio } =
+  Astro.props;
+const m = IMAGES[slot];
+const style = ratio ? `aspect-ratio:${ratio};` : undefined;
+---
+
+<picture class:list={["img", className]}>
+  <source type="image/avif" srcset={srcset(slot, "avif")} sizes={sizes} />
+  <source type="image/webp" srcset={srcset(slot, "webp")} sizes={sizes} />
+  <img
+    src={fallbackSrc(slot)}
+    width={m.w}
+    height={m.h}
+    alt={alt}
+    style={style}
+    loading={hero ? "eager" : "lazy"}
+    decoding="async"
+    fetchpriority={hero ? "high" : undefined}
+  />
+</picture>
+
+<style>
+  .img,
+  .img img {
+    display: block;
+    width: 100%;
+  }
+  .img img {
+    height: auto;
+    object-fit: cover;
+  }
+</style>

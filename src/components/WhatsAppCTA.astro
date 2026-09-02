@@ -1,0 +1,140 @@
+---
+/**
+ * The one action on this site. Deep-linked, carrying its SPTT- code.
+ *
+ * Deliberate deviation from the BelArosa reference (which forbids filled
+ * buttons): the primary CTA is filled anyway, because a ghost pill for the
+ * single conversion action is a conversion failure. Secondary CTAs stay
+ * ghost pills, so exactly one filled pill appears per viewport and reads
+ * as *the* action. On light surfaces the ghost follows the reference
+ * exactly: teal border, teal text, hover fills the teal with white text.
+ */
+import { waLink, type EnquiryContext } from "../lib/whatsapp";
+import { PRIMARY_WA, type WhatsAppContact } from "../data/config";
+import type { Lang } from "../lib/gated";
+
+interface Props {
+  lang: Lang;
+  /** Immutable SPTT code carried into the message body. */
+  code?: string;
+  product?: string;
+  detail?: string[];
+  contact?: WhatsAppContact;
+  variant?: "primary" | "ghost";
+  label?: string;
+  class?: string;
+}
+
+const {
+  lang,
+  code,
+  product,
+  detail,
+  contact = PRIMARY_WA,
+  variant = "primary",
+  label,
+  class: className = "",
+} = Astro.props;
+
+const ctx: EnquiryContext = { code, product, detail };
+const url = waLink(ctx, lang, contact);
+
+const defaultLabel = lang === "bm" ? "Tanya di WhatsApp" : "Ask on WhatsApp";
+const text = label ?? defaultLabel;
+
+// The accessible name says what the enquiry is about, not just "WhatsApp".
+// A passed `label` already carries that context (e.g. "Tanya tentang Sipadan"),
+// so only the default label gets the "… tentang {product}" suffix — otherwise
+// the product name doubles up ("… Sipadan tentang Sipadan").
+const aria =
+  label || !product
+    ? text
+    : lang === "bm"
+      ? `${text} tentang ${product}`
+      : `${text} about ${product}`;
+---
+
+<a
+  class:list={["cta", `cta--${variant}`, className]}
+  href={url}
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label={aria}
+>
+  <svg class="cta__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path
+      fill="currentColor"
+      d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.3-1.38a9.87 9.87 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.13-2.9-7A9.82 9.82 0 0 0 12.04 2Zm0 18.02h-.01a8.2 8.2 0 0 1-4.18-1.15l-.3-.18-3.11.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.36c0-4.54 3.7-8.23 8.24-8.23 2.2 0 4.27.86 5.82 2.41a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.21-8.24 8.21Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.15.16-.29.18-.53.06-.25-.13-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.09-.16.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.47c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.22-.16-.47-.28Z"
+    ></path>
+  </svg>
+  <span>{text}</span>
+</a>
+
+<style>
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+
+    /* min 44px tall — WCAG 2.2 target size. Deviation §8.3. */
+    min-height: 44px;
+    padding: 0.75rem 1.75rem;
+
+    border-radius: var(--radius-pill);
+    border: 1.5px solid transparent;
+
+    font-family: var(--font-body);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+
+    transition:
+      background-color var(--dur-micro) var(--ease-micro),
+      color var(--dur-micro) var(--ease-micro),
+      border-color var(--dur-micro) var(--ease-micro);
+  }
+
+  .cta__icon { width: 1.125rem; height: 1.125rem; flex: none; }
+
+  /* ---- Primary: the only filled button on the page ---- */
+  .cta--primary {
+    background: var(--color-wa);
+    color: var(--color-wa-ink); /* 7.4:1 — verified */
+  }
+  .cta--primary:hover {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  /* ---- Ghost: everything else. Teal on light, white on dark. ---- */
+  .cta--ghost {
+    background: transparent;
+    color: var(--color-ink);
+    border-color: var(--color-border-light);
+  }
+  .cta--ghost:hover {
+    background: var(--color-deep);
+    color: var(--color-paper);
+    border-color: var(--color-deep);
+  }
+
+  :global([data-surface="dark"]) .cta--ghost,
+  :global([data-surface="mid"]) .cta--ghost,
+  :global([data-surface="abyss"]) .cta--ghost,
+  :global(.on-dark) .cta--ghost {
+    color: var(--color-paper);
+    border-color: var(--color-border-dark);
+  }
+  :global([data-surface="dark"]) .cta--ghost:hover,
+  :global([data-surface="mid"]) .cta--ghost:hover,
+  :global([data-surface="abyss"]) .cta--ghost:hover,
+  :global(.on-dark) .cta--ghost:hover {
+    background: var(--color-paper);
+    color: var(--color-deep);
+    border-color: var(--color-paper);
+  }
+</style>

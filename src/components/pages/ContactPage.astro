@@ -1,0 +1,165 @@
+---
+/**
+ * P010 — Hubungi / Contact.
+ *
+ * Hard rule 8 — there is NO email. v1 invented `info@sempornaparadise.com`.
+ * Hard rule 5 — no bank account number.
+ * B14 — no routing owner is confirmed, so the page never says who answers what.
+ * All four WhatsApp numbers appear.
+ */
+import Base from "../../layouts/Base.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import Notice from "../Notice.astro";
+import Img from "../Img.astro";
+import { COMPANY, WHATSAPP, SOCIAL, HOURS } from "../../data/config";
+import { waLink } from "../../lib/whatsapp";
+import type { Lang } from "../../lib/gated";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  bm: {
+    title: "Hubungi",
+    desc: "Empat nombor WhatsApp rasmi Semporna Paradise, waktu operasi dan alamat di Semporna. Semua pertanyaan melalui WhatsApp — tiada e-mel rasmi.",
+    eyebrow: "Hubungi",
+    h1: "Hubungi kami di WhatsApp",
+    lead: "WhatsApp ialah satu-satunya saluran pertanyaan kami. Pilih mana-mana nombor di bawah — semuanya rasmi.",
+    numbersHead: "Nombor WhatsApp",
+    open: "Buka WhatsApp",
+    hoursHead: "Waktu operasi",
+    addrHead: "Alamat",
+    socialHead: "Media sosial",
+    noEmailTitle: "Tiada e-mel",
+    noEmail: "Kami tidak menyiarkan alamat e-mel rasmi kerana tiada satu yang disahkan. Sila gunakan WhatsApp untuk semua pertanyaan.",
+    routingTitle: "Nombor mana satu?",
+    routing: "Keempat-empat nombor menerima pertanyaan jualan. Tiada nombor khusus untuk topik tertentu.",
+    imgAlt: "Jeti kayu pada waktu senja dengan cahaya tanglung yang hangat.",
+    imgCaption: "Imej dijana. Suasana jeti pada waktu petang di Semporna.",
+  },
+  en: {
+    title: "Contact",
+    desc: "Semporna Paradise's four official WhatsApp numbers, operating hours and address in Semporna. All enquiries go through WhatsApp — there is no official email.",
+    eyebrow: "Contact",
+    h1: "Contact us on WhatsApp",
+    lead: "WhatsApp is our only enquiry channel. Pick any number below — all of them are official.",
+    numbersHead: "WhatsApp numbers",
+    open: "Open WhatsApp",
+    hoursHead: "Operating hours",
+    addrHead: "Address",
+    socialHead: "Social media",
+    noEmailTitle: "No email",
+    noEmail: "We do not publish an official email address because none is confirmed. Please use WhatsApp for all enquiries.",
+    routingTitle: "Which number?",
+    routing: "All four numbers take sales enquiries. There is no dedicated number for a specific topic.",
+    imgAlt: "A wooden jetty at dusk with warm lantern light.",
+    imgCaption: "Generated image. The feel of a jetty in the evening in Semporna.",
+  },
+}[lang];
+---
+
+<Base route="contact" lang={lang} title={c.title} description={c.desc}>
+  <section class="section--tall" data-surface="light" data-reveal>
+    <div class="wrap ph2">
+      <div>
+        <p class="eyebrow">{c.eyebrow}</p>
+        <h1 class="sec__title">{c.h1}</h1>
+        <p class="sec__lead">{c.lead}</p>
+        <div class="band-cta band-cta--start">
+          <WhatsAppCTA lang={lang} label={c.open} product={lang === "bm" ? "Pertanyaan umum" : "General enquiry"} />
+        </div>
+      </div>
+      <figure class="ph2__media">
+        <Img slot="hubungi-hero" alt={c.imgAlt} hero sizes="(min-width: 900px) 42vw, 100vw" />
+        <figcaption>{c.imgCaption}</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" data-surface="sand" data-reveal>
+    <div class="wrap">
+      <h2 class="sec__title">{c.numbersHead}</h2>
+      <ul class="nums">
+        {WHATSAPP.map((w) => (
+          <li>
+            <span class="nums__n">{w.display}</span>
+            <a
+              class="nums__go"
+              href={waLink({ product: lang === "bm" ? "Pertanyaan umum" : "General enquiry" }, lang, w)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {c.open}
+              <span class="u-sr"> — {w.display}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <Notice title={c.routingTitle} tone="neutral"><p>{c.routing}</p></Notice>
+    </div>
+  </section>
+
+  <section class="section" data-surface="light" data-reveal>
+    <div class="wrap prose">
+      <h2>{c.hoursHead}</h2>
+      <p>{HOURS[lang]}</p>
+      <h2>{c.addrHead}</h2>
+      <p>{COMPANY.address}</p>
+      <h2>{c.socialHead}</h2>
+      <ul>
+        <li><a href={SOCIAL.facebook} target="_blank" rel="noopener noreferrer">Facebook</a></li>
+        <li><a href={SOCIAL.instagram} target="_blank" rel="noopener noreferrer">Instagram</a></li>
+        <li><a href={SOCIAL.tiktok} target="_blank" rel="noopener noreferrer">TikTok</a></li>
+      </ul>
+      <Notice title={c.noEmailTitle}><p>{c.noEmail}</p></Notice>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .u-sr {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  .ph2 { display: grid; gap: 3rem; }
+  @media (min-width: 900px) {
+    .ph2 { grid-template-columns: minmax(0, 1fr) minmax(0, 0.75fr); align-items: center; gap: 4rem; }
+  }
+  .ph2__media { margin: 0; }
+  .ph2__media :global(.img img) { border-radius: var(--radius-card); }
+  .ph2__media figcaption { margin-top: 0.75rem; font-size: var(--text-caption); color: var(--color-ink-muted); }
+
+  .nums { list-style: none; margin: 2rem 0 0; padding: 0; }
+  .nums li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 0;
+    border-top: 1px solid var(--color-rule-light);
+  }
+  .nums li:last-child { border-bottom: 1px solid var(--color-rule-light); }
+  .nums__n {
+    font-family: var(--font-display);
+    font-size: var(--text-subheading);
+    font-variant-numeric: tabular-nums;
+  }
+  .nums__go {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 1.25rem;
+    border: 1.5px solid var(--color-border-light);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    text-decoration: none;
+    transition: background-color var(--dur-micro) var(--ease-micro), color var(--dur-micro) var(--ease-micro);
+  }
+  .nums__go:hover { background: var(--color-deep); color: var(--color-paper); }
+</style>

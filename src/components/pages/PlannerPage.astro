@@ -1,0 +1,397 @@
+---
+/**
+ * P006 — Rancang Perjalanan / Plan Your Trip. The trip shaper, DESIGN.md §5.6.
+ *
+ * Three questions — who is travelling, how many nights, diving or not — return a
+ * short list of resorts and build a prefilled WhatsApp message that carries the
+ * matching SPTT- codes. One Astro island, vanilla JS, no framework, no backend,
+ * no form POST.
+ *
+ * Without JS the island is hidden and the full resort list plus a plain
+ * WhatsApp link is shown instead — nothing is lost.
+ */
+import Base from "../../layouts/Base.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import Gated from "../Gated.astro";
+import Notice from "../Notice.astro";
+import { RESORTS, DURATIONS, DURATION_LABELS, fromPrice } from "../../data/resorts";
+import { resortDetailPath } from "../../lib/routes";
+import { PRIMARY_WA } from "../../data/config";
+import type { Lang } from "../../lib/gated";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+// A compact, transparent model for the client script. Every price still comes
+// from data/resorts.ts — nothing is invented here.
+const model = RESORTS.map((r) => ({
+  slug: r.slug,
+  name: r.name,
+  room: r.room,
+  code: r.code,
+  from: fromPrice(r),
+  prices: r.prices,
+  href: { bm: resortDetailPath(r.slug, "bm"), en: resortDetailPath(r.slug, "en") },
+}));
+
+const c = {
+  bm: {
+    title: "Rancang Perjalanan",
+    desc: "Jawab tiga soalan dan dapatkan senarai pendek resort Semporna dengan mesej WhatsApp yang sudah lengkap dengan kod pakej anda.",
+    eyebrow: "Rancang perjalanan",
+    h1: "Jawab tiga soalan",
+    lead: "Kami tunjukkan beberapa resort yang berpadanan dan sediakan mesej WhatsApp yang sudah lengkap. Tiada borang dihantar, tiada akaun.",
+    q1: "Siapa yang pergi?",
+    q1opts: [["keluarga", "Keluarga"], ["pasangan", "Pasangan"], ["kumpulan", "Kumpulan"], ["penyelam", "Penyelam bersijil"]],
+    q2: "Berapa malam?",
+    q2opts: [["2D1N", "1 malam"], ["3D2N", "2 malam"], ["4D3N", "3 malam"]],
+    q3: "Mahu menyelam?",
+    q3opts: [["ya", "Ya"], ["tidak", "Tidak"]],
+    submit: "Tunjukkan senarai pendek",
+    resultHead: "Senarai pendek anda",
+    resultLead: "Berdasarkan jawapan anda. Semua harga setiap orang dan disahkan semasa pertanyaan.",
+    perPerson: "seorang",
+    viewResort: "Lihat resort",
+    diveNote: "Anda menandakan minat menyelam. Sebut ini dalam mesej supaya kami boleh sertakan pilihan Sipadan, Open Water atau Advanced Open Water.",
+    waLabel: "Hantar senarai pendek ke WhatsApp",
+    noJsHead: "Senarai penuh resort",
+    noJsLead: "Perancang memerlukan JavaScript. Sementara itu, ini semua resort dengan harga terendah. Hubungi kami di WhatsApp dengan tarikh dan bilangan peserta.",
+    labelWho: "Rombongan",
+    labelNights: "Tempoh",
+    labelDive: "Menyelam",
+  },
+  en: {
+    title: "Plan Your Trip",
+    desc: "Answer three questions and get a short list of Semporna resorts with a WhatsApp message already filled in with your package codes.",
+    eyebrow: "Plan your trip",
+    h1: "Answer three questions",
+    lead: "We show a few resorts that fit and prepare a WhatsApp message that is already filled in. No form is submitted, no account.",
+    q1: "Who is travelling?",
+    q1opts: [["keluarga", "Family"], ["pasangan", "Couple"], ["kumpulan", "Group"], ["penyelam", "Certified divers"]],
+    q2: "How many nights?",
+    q2opts: [["2D1N", "1 night"], ["3D2N", "2 nights"], ["4D3N", "3 nights"]],
+    q3: "Want to dive?",
+    q3opts: [["ya", "Yes"], ["tidak", "No"]],
+    submit: "Show my short list",
+    resultHead: "Your short list",
+    resultLead: "Based on your answers. All prices are per person and confirmed at enquiry.",
+    perPerson: "per person",
+    viewResort: "View resort",
+    diveNote: "You marked an interest in diving. Mention this in the message so we can include Sipadan, Open Water or Advanced Open Water options.",
+    waLabel: "Send my short list to WhatsApp",
+    noJsHead: "Full resort list",
+    noJsLead: "The planner needs JavaScript. In the meantime, here is every resort by lowest price. Contact us on WhatsApp with your dates and party size.",
+    labelWho: "Party",
+    labelNights: "Length",
+    labelDive: "Diving",
+  },
+}[lang];
+
+const noJsRows = [...RESORTS].sort((a, b) => {
+  const pa = fromPrice(a); const pb = fromPrice(b);
+  if (pa === null) return 1;
+  if (pb === null) return -1;
+  return pa - pb;
+});
+---
+
+<Base route="planner" lang={lang} title={c.title} description={c.desc}>
+  <section class="section--tall" data-surface="light" data-reveal>
+    <div class="wrap">
+      <p class="eyebrow">{c.eyebrow}</p>
+      <h1 class="sec__title">{c.h1}</h1>
+      <p class="sec__lead">{c.lead}</p>
+    </div>
+  </section>
+
+  <section class="section" data-surface="sand" data-reveal>
+    <div class="wrap">
+      <div
+        class="shaper"
+        data-shaper
+        data-lang={lang}
+        data-wa={PRIMARY_WA.e164}
+        data-model={JSON.stringify(model)}
+        data-i18n={JSON.stringify({
+          from: c.perPerson, view: c.viewResort, resultHead: c.resultHead,
+          resultLead: c.resultLead, diveNote: c.diveNote, waLabel: c.waLabel,
+          labelWho: c.labelWho, labelNights: c.labelNights, labelDive: c.labelDive,
+          durations: Object.fromEntries(DURATIONS.map((d) => [d, DURATION_LABELS[d][lang]])),
+          whoLabels: Object.fromEntries(c.q1opts),
+        })}
+        hidden
+      >
+        <form class="shaper__form" data-form>
+          <fieldset>
+            <legend>{c.q1}</legend>
+            <div class="shaper__opts">
+              {c.q1opts.map(([v, label], i) => (
+                <label>
+                  <input type="radio" name="who" value={v} checked={i === 0} />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>{c.q2}</legend>
+            <div class="shaper__opts">
+              {c.q2opts.map(([v, label], i) => (
+                <label>
+                  <input type="radio" name="nights" value={v} checked={i === 1} />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>{c.q3}</legend>
+            <div class="shaper__opts">
+              {c.q3opts.map(([v, label], i) => (
+                <label>
+                  <input type="radio" name="dive" value={v} checked={i === 1} />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <button type="submit" class="shaper__go">{c.submit}</button>
+        </form>
+
+        <div class="shaper__result" data-result aria-live="polite"></div>
+      </div>
+
+      <div data-nojs>
+        <h2 class="sec__title">{c.noJsHead}</h2>
+        <p class="sec__lead">{c.noJsLead}</p>
+        <ul class="nojs-list">
+          {noJsRows.map((r) => (
+            <li>
+              <a href={resortDetailPath(r.slug, lang)}>
+                <span>{r.name} — {r.room}</span>
+                <span>
+                  <Gated value={fromPrice(r)} kind="price" blocker={r.blockers?.[0]} lang={lang} />
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <div class="band-cta band-cta--start">
+          <WhatsAppCTA lang={lang} label={c.waLabel} product={lang === "bm" ? "Rancang perjalanan" : "Trip planning"} />
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { enquiryMessage } from "../../lib/whatsapp";
+
+  type Model = {
+    slug: string; name: string; room: string; code: string;
+    from: number | null; prices: Record<string, number | null>;
+    href: { bm: string; en: string };
+  };
+
+  document.querySelectorAll<HTMLElement>("[data-shaper]").forEach((root) => {
+    const nojs = root.parentElement?.querySelector<HTMLElement>("[data-nojs]");
+    const form = root.querySelector<HTMLFormElement>("[data-form]");
+    const out = root.querySelector<HTMLElement>("[data-result]");
+    if (!form || !out) return;
+
+    root.hidden = false;
+    if (nojs) nojs.hidden = true;
+
+    const lang = (root.dataset.lang as "bm" | "en") ?? "bm";
+    const wa = root.dataset.wa ?? "";
+    const model: Model[] = JSON.parse(root.dataset.model ?? "[]");
+    const i18n = JSON.parse(root.dataset.i18n ?? "{}");
+    const fmt = (n: number) => `RM${n.toLocaleString("en-MY", { maximumFractionDigits: 0 })}`;
+
+    function shortlist(who: string, nights: string) {
+      const withPrice = model
+        .map((m) => ({ m, price: m.prices[nights] ?? m.from }))
+        .filter((x) => typeof x.price === "number") as { m: Model; price: number }[];
+      withPrice.sort((a, b) => a.price - b.price);
+
+      // Transparent bands. Family / group lean affordable; couples and divers
+      // get the middle and upper range. Never a hard claim — just an ordering.
+      const n = withPrice.length;
+      let pick: typeof withPrice;
+      if (who === "keluarga" || who === "kumpulan") pick = withPrice.slice(0, 5);
+      else if (who === "pasangan") pick = withPrice.slice(Math.floor(n * 0.25), Math.floor(n * 0.25) + 5);
+      else pick = withPrice.slice(Math.floor(n * 0.35), Math.floor(n * 0.35) + 5);
+      return pick.slice(0, 4);
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const who = String(data.get("who"));
+      const nights = String(data.get("nights"));
+      const dive = String(data.get("dive"));
+
+      const picks = shortlist(who, nights);
+      const durLabel = i18n.durations?.[nights] ?? nights;
+      const whoLabel = i18n.whoLabels?.[who] ?? who;
+      const diveLabel = dive === "ya" ? (lang === "bm" ? "Ya" : "Yes") : (lang === "bm" ? "Tidak" : "No");
+
+      const detail = [
+        `${i18n.labelWho}: ${whoLabel}`,
+        `${i18n.labelNights}: ${durLabel}`,
+        `${i18n.labelDive}: ${diveLabel}`,
+        ...picks.map((p) => `- ${p.m.name} ${p.m.room} (${p.m.code}-${nights}): ${fmt(p.price)}`),
+      ];
+      const msg = enquiryMessage(
+        { product: lang === "bm" ? "Senarai pendek dari perancang" : "Short list from the planner", detail },
+        lang,
+      );
+      const waHref = `https://wa.me/${wa}?text=${encodeURIComponent(msg)}`;
+
+      const rows = picks
+        .map(
+          (p) => `
+          <li>
+            <a href="${p.m.href[lang]}">
+              <span>${p.m.name} — ${p.m.room}</span>
+              <span>${fmt(p.price)} <small>/ ${i18n.from}</small></span>
+            </a>
+          </li>`,
+        )
+        .join("");
+
+      out.innerHTML = `
+        <h2 tabindex="-1">${i18n.resultHead}</h2>
+        <p class="shaper__rlead">${i18n.resultLead}</p>
+        <ul class="shaper__list">${rows}</ul>
+        ${dive === "ya" ? `<p class="shaper__dive">${i18n.diveNote}</p>` : ""}
+        <a class="shaper__wa" href="${waHref}" target="_blank" rel="noopener noreferrer">${i18n.waLabel}</a>
+      `;
+      // Move focus to the result heading so assistive tech lands on the new
+      // content — an aria-live insert alone can be missed on the same tick.
+      const heading = out.querySelector<HTMLElement>("h2");
+      heading?.focus();
+      heading?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  });
+</script>
+
+<style>
+  .shaper__form { display: grid; gap: 2.5rem; max-width: 40rem; }
+  .shaper__form fieldset { border: 0; margin: 0; padding: 0; }
+  .shaper__form legend {
+    font-family: var(--font-display);
+    font-size: var(--text-heading-sm);
+    margin-bottom: 1rem;
+  }
+  .shaper__opts { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .shaper__opts label {
+    position: relative;
+    display: inline-flex;
+  }
+  .shaper__opts input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .shaper__opts span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 1.25rem;
+    border: 1.5px solid var(--color-border-light);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-body-sm);
+    transition: background-color var(--dur-micro) var(--ease-micro),
+      color var(--dur-micro) var(--ease-micro);
+  }
+  .shaper__opts input:checked + span {
+    background: var(--color-deep);
+    color: var(--color-paper);
+    border-color: var(--color-deep);
+  }
+  .shaper__opts input:focus-visible + span {
+    outline: 2px solid var(--color-deep);
+    outline-offset: 3px;
+  }
+
+  .shaper__go {
+    justify-self: start;
+    min-height: 44px;
+    padding: 0 2rem;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--color-wa);
+    color: var(--color-wa-ink);
+    font: inherit;
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .shaper__result { margin-top: 3.5rem; min-height: 2rem; }
+  /* Kept in the DOM as a live region even when empty; collapse the gap then. */
+  .shaper__result:empty { margin-top: 0; min-height: 0; }
+  .shaper__result :global(h2) { font-size: clamp(1.75rem, 3.2vw, 2.25rem); }
+  .shaper__result :global(.shaper__rlead) {
+    margin-top: 0.75rem;
+    color: var(--color-ink-muted);
+    font-size: var(--text-body-sm);
+    max-width: 52ch;
+  }
+  .shaper__result :global(.shaper__list) { list-style: none; margin: 2rem 0 0; padding: 0; }
+  .shaper__result :global(.shaper__list li) { border-top: 1px solid var(--color-rule-light); }
+  .shaper__result :global(.shaper__list li:last-child) { border-bottom: 1px solid var(--color-rule-light); }
+  .shaper__result :global(.shaper__list a) {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: baseline;
+    padding: 1rem 0.5rem;
+    text-decoration: none;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .shaper__result :global(.shaper__list a:hover) { background: var(--color-parchment); }
+  .shaper__result :global(.shaper__list small) { color: var(--color-ink-muted); }
+  .shaper__result :global(.shaper__dive) {
+    margin-top: 1.5rem;
+    padding: 1rem 0 1rem 1.5rem;
+    border-left: 2px solid var(--color-gold);
+    font-size: var(--text-body-sm);
+    max-width: 56ch;
+  }
+  .shaper__result :global(.shaper__wa) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-top: 2rem;
+    padding: 0 2rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-wa);
+    color: var(--color-wa-ink);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .nojs-list { list-style: none; margin: 2rem 0 0; padding: 0; }
+  .nojs-list li { border-top: 1px solid var(--color-rule-light); }
+  .nojs-list li:last-child { border-bottom: 1px solid var(--color-rule-light); }
+  .nojs-list a {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 0.5rem;
+    text-decoration: none;
+    color: var(--color-ink);
+    font-size: var(--text-body-sm);
+    font-variant-numeric: tabular-nums;
+  }
+  .nojs-list a:hover { background: var(--color-parchment); }
+</style>

@@ -1,0 +1,166 @@
+---
+/**
+ * P005 — Selam & PADI / Diving & PADI.
+ *
+ * Four products: scuba, Sipadan, PADI Open Water, PADI Advanced Open Water.
+ * Every course schedule is a PLANNING ESTIMATE and says so (B10). Scuba and
+ * Sipadan have no verified inclusion list, so that renders as a fallback, not a
+ * guess. No safety guarantee anywhere — process and limits only (hard rule 6).
+ * Sipadan gets its own verification-first page; here it is one row plus a link.
+ */
+import Base from "../../layouts/Base.astro";
+import Gated from "../Gated.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import Notice from "../Notice.astro";
+import Img from "../Img.astro";
+import { DIVE_PRODUCTS } from "../../data/products";
+import { href } from "../../lib/routes";
+import type { Lang } from "../../lib/gated";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  bm: {
+    title: "Selam & PADI",
+    desc: "Menyelam skuba, pakej Sipadan, dan kursus PADI Open Water serta Advanced Open Water di Semporna. Harga setiap orang. Tempoh kursus adalah anggaran perancangan.",
+    eyebrow: "Selam & PADI",
+    h1: "Turun ke tebing Sipadan",
+    lead: "Menyelam skuba harian, pakej Sipadan, dan sijil PADI. Kelayakan, permit dan jadual perlu disahkan sebelum tempahan diterima.",
+    perPerson: "seorang",
+    inclHead: "Termasuk",
+    durationHead: "Tempoh",
+    inclFallback: "Butiran penuh belum disahkan. Minta senarai peralatan, bilangan selaman dan syarat kelayakan melalui WhatsApp.",
+    sipadanLink: "Maklumat Sipadan",
+    safetyTitle: "Keselamatan & kelayakan",
+    safety: "Kami menerangkan proses dan had, bukan jaminan. Borang perubatan, umur minimum, tahap kecergasan dan pengalaman selam disemak untuk setiap peserta sebelum sebarang selaman.",
+    scheduleTitle: "Tempoh kursus",
+    schedule: "Tempoh kursus adalah anggaran untuk perancangan sahaja. Jadual sebenar bergantung pada cuaca, pasang surut, ketersediaan jurulatih dan kemajuan peserta.",
+    ask: "Tanya tentang selam",
+  },
+  en: {
+    title: "Diving & PADI",
+    desc: "Scuba diving, Sipadan packages, and PADI Open Water and Advanced Open Water courses in Semporna. Prices per person. Course length is a planning estimate.",
+    eyebrow: "Diving & PADI",
+    h1: "Down to the Sipadan wall",
+    lead: "Day scuba diving, Sipadan packages, and PADI certification. Eligibility, permits and schedules must be confirmed before a booking is accepted.",
+    perPerson: "per person",
+    inclHead: "Included",
+    durationHead: "Length",
+    inclFallback: "Full detail is not yet confirmed. Ask for the equipment list, dive count and eligibility conditions on WhatsApp.",
+    sipadanLink: "Sipadan information",
+    safetyTitle: "Safety & eligibility",
+    safety: "We describe the process and the limits, not a guarantee. A medical form, minimum age, fitness level and dive experience are checked for every participant before any dive.",
+    scheduleTitle: "Course length",
+    schedule: "Course length is an estimate for planning only. The real schedule depends on weather, tides, instructor availability and each participant's progress.",
+    ask: "Ask about diving",
+  },
+}[lang];
+---
+
+<Base route="diving" lang={lang} title={c.title} description={c.desc}>
+  <section class="section--tall" data-surface="dark" data-reveal>
+    <div class="wrap ph2">
+      <div>
+        <p class="eyebrow">{c.eyebrow}</p>
+        <h1 class="sec__title">{c.h1}</h1>
+        <p class="sec__lead">{c.lead}</p>
+        <div class="band-cta band-cta--start">
+          <a class="pill" href={href("sipadan", lang)}>{c.sipadanLink}</a>
+        </div>
+      </div>
+      <figure class="ph2__media">
+        <Img
+          slot="selam-hero"
+          alt={lang === "bm"
+            ? "Bayang penyelam skuba jauh di atas kamera, disinari cahaya matahari yang menembusi air biru."
+            : "A scuba diver silhouetted far above the camera, backlit by sunlight through blue water."}
+          hero
+          sizes="(min-width: 900px) 45vw, 100vw"
+        />
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" data-surface="sand" data-reveal>
+    <div class="wrap">
+      <ul class="dives">
+        {DIVE_PRODUCTS.map((p) => (
+          <li class="dive">
+            <div class="dive__head">
+              <h2 class="dive__name">{p.name[lang]}</h2>
+              <p class="dive__price">
+                <Gated value={p.price} kind="price" blocker={p.blockers[0]} lang={lang} />
+                {p.price !== null && <span> / {c.perPerson}</span>}
+              </p>
+            </div>
+            <div class="dive__body">
+              <div>
+                <h3>{c.inclHead}</h3>
+                {p.inclusions[lang].length > 0 ? (
+                  <ul>{p.inclusions[lang].map((i) => <li>{i}</li>)}</ul>
+                ) : (
+                  <p class="dive__fallback">{c.inclFallback}</p>
+                )}
+              </div>
+              {p.durationEstimate && (
+                <div>
+                  <h3>{c.durationHead}</h3>
+                  <p>{p.durationEstimate[lang]}</p>
+                </div>
+              )}
+            </div>
+            <WhatsAppCTA
+              lang={lang}
+              variant="ghost"
+              code={p.code}
+              product={p.name[lang]}
+              label={c.ask}
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" data-surface="light" data-reveal>
+    <div class="wrap notices">
+      <Notice title={c.safetyTitle}><p>{c.safety}</p></Notice>
+      <Notice title={c.scheduleTitle} tone="neutral"><p>{c.schedule}</p></Notice>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .ph2 { display: grid; gap: 3rem; }
+  @media (min-width: 900px) {
+    .ph2 { grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); align-items: center; gap: 4rem; }
+  }
+  .ph2__media { margin: 0; }
+  .ph2__media :global(.img img) { border-radius: var(--radius-card); }
+
+  .dives { list-style: none; margin: 0; padding: 0; }
+  .dive {
+    padding: 2.25rem 0;
+    border-top: 1px solid var(--color-rule-light);
+  }
+  .dive:last-child { border-bottom: 1px solid var(--color-rule-light); }
+  .dive__head {
+    display: flex; flex-wrap: wrap; align-items: baseline;
+    justify-content: space-between; gap: 0.75rem 1.5rem;
+  }
+  .dive__name { font-size: var(--text-heading-sm); line-height: 1.2; }
+  .dive__price { font-size: var(--text-subheading); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .dive__price span { font-size: var(--text-body-sm); color: var(--color-ink-muted); }
+  .dive__body { display: grid; gap: 2rem; margin: 1.5rem 0 1.75rem; }
+  @media (min-width: 720px) { .dive__body { grid-template-columns: 1fr 1fr; } }
+  .dive__body h3 {
+    font-family: var(--font-body); font-size: var(--text-caption); font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-ink-muted);
+    margin-bottom: 0.75rem;
+  }
+  .dive__body ul { margin: 0; padding-left: 1.1rem; }
+  .dive__body li { margin-top: 0.4rem; font-size: var(--text-body-sm); line-height: 1.5; }
+  .dive__fallback { font-size: var(--text-body-sm); color: var(--color-ink-muted); line-height: 1.6; max-width: 46ch; }
+  .notices { display: grid; gap: 2rem; }
+</style>

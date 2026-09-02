@@ -1,0 +1,125 @@
+---
+/**
+ * P041 Privasi / Privacy  and  P042 Terma / Terms.
+ *
+ * Both carry open blockers (B15 privacy retention incomplete; B12 terms legal
+ * review incomplete). So both pages are deliberately minimal and non-committal
+ * on the points still under review: no retention periods, no cancellation
+ * wording, no liability language. Each says the full document is provided at
+ * booking and points to contact.
+ */
+import Base from "../../layouts/Base.astro";
+import Notice from "../Notice.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import { COMPANY } from "../../data/config";
+import { href } from "../../lib/routes";
+import type { Lang } from "../../lib/gated";
+import type { RouteId } from "../../lib/routes";
+
+interface Props { lang: Lang; kind: "privacy" | "terms" }
+const { lang, kind } = Astro.props;
+const route: RouteId = kind;
+
+const DATA = {
+  privacy: {
+    bm: {
+      title: "Dasar Privasi",
+      desc: "Cara Semporna Paradise mengumpul dan menggunakan maklumat yang anda berikan semasa pertanyaan. Kami mengumpul seminimum mungkin dan tidak menerima pembayaran di laman web ini.",
+      eyebrow: "Privasi",
+      h1: "Dasar privasi",
+      lead: "Nota ini menerangkan maklumat yang kami kumpul semasa anda membuat pertanyaan. Ia akan dikemas kini apabila semakan dalaman selesai.",
+      sections: [
+        ["Maklumat yang kami kumpul", "Apabila anda menghubungi kami di WhatsApp, kami menerima nombor telefon anda dan butiran yang anda kongsi — tarikh perjalanan, bilangan peserta, dan keperluan khas. Kami hanya meminta apa yang perlu untuk menyemak dan menyebut harga."],
+        ["Cara ia digunakan", "Maklumat digunakan untuk menyemak ketersediaan, menyediakan sebut harga, dan menguruskan tempahan anda. Kami tidak menjual maklumat anda."],
+        ["Pembayaran", "Laman web ini tidak menerima pembayaran. Arahan pembayaran diberikan secara berasingan selepas sebut harga."],
+        ["Penyimpanan & akses", "Tempoh penyimpanan dan proses permintaan atau pemadaman data sedang dimuktamadkan. Sementara itu, hubungi kami di WhatsApp untuk sebarang permintaan berkaitan maklumat anda."],
+      ],
+      noticeTitle: "Sedang dikemas kini",
+      notice: "Butiran penuh penyimpanan dan hak data akan ditambah selepas semakan dalaman selesai.",
+    },
+    en: {
+      title: "Privacy Policy",
+      desc: "How Semporna Paradise collects and uses the information you provide during an enquiry. We collect the minimum and take no payment on this website.",
+      eyebrow: "Privacy",
+      h1: "Privacy policy",
+      lead: "This note explains what we collect when you make an enquiry. It will be updated once an internal review is complete.",
+      sections: [
+        ["What we collect", "When you contact us on WhatsApp, we receive your phone number and the details you share — travel dates, party size, and special requirements. We only ask for what is needed to check and quote."],
+        ["How it is used", "Information is used to check availability, prepare a quote, and manage your booking. We do not sell your information."],
+        ["Payment", "This website takes no payment. Payment instructions are given separately after a quote."],
+        ["Storage & access", "Retention periods and the process to request or delete data are being finalised. In the meantime, contact us on WhatsApp for any request about your information."],
+      ],
+      noticeTitle: "Being updated",
+      notice: "Full detail on storage and data rights will be added once an internal review is complete.",
+    },
+  },
+  terms: {
+    bm: {
+      title: "Terma & Syarat",
+      desc: "Terma penggunaan laman web Semporna Paradise. Laman ini memberi maklumat sahaja — ia bukan sistem tempahan dalam talian dan tiada pembayaran diterima di sini.",
+      eyebrow: "Terma & syarat",
+      h1: "Terma & syarat",
+      lead: "Terma ringkas untuk penggunaan laman web ini. Terma tempahan penuh diberikan secara bertulis semasa anda menempah.",
+      sections: [
+        ["Peranan laman web", "Laman ini memberi maklumat dan harga rujukan. Ia bukan sistem tempahan dalam talian, bukan pengesahan pembayaran, dan tiada pembayaran diterima di sini."],
+        ["Harga", "Harga yang dipaparkan adalah rujukan dan boleh berubah. Harga muktamad disahkan dalam sebut harga anda."],
+        ["Tempahan", "Tempahan diuruskan melalui WhatsApp. Ketersediaan bilik, permit dan slot adalah atas permintaan sehingga disahkan secara bertulis."],
+        ["Terma penuh", "Terma tempahan, pembayaran, pembatalan dan penangguhan yang lengkap diberikan secara bertulis semasa tempahan dan sedang dalam semakan. Hubungi kami untuk versi terkini."],
+      ],
+      noticeTitle: "Sedang disemak",
+      notice: "Terma tempahan penuh sedang dalam semakan undang-undang dan operasi. Halaman ini akan dikemas kini apabila selesai.",
+    },
+    en: {
+      title: "Terms & Conditions",
+      desc: "Terms of use for the Semporna Paradise website. This site is for information only — it is not an online booking system and takes no payment here.",
+      eyebrow: "Terms & conditions",
+      h1: "Terms & conditions",
+      lead: "Short terms for using this website. The full booking terms are given in writing when you book.",
+      sections: [
+        ["The website's role", "This site gives information and reference prices. It is not an online booking system, not a payment confirmation, and takes no payment here."],
+        ["Prices", "Displayed prices are references and may change. The final price is confirmed in your quote."],
+        ["Bookings", "Bookings are handled on WhatsApp. Rooms, permits and slots are on request until confirmed in writing."],
+        ["Full terms", "The complete booking, payment, cancellation and postponement terms are given in writing at booking and are under review. Contact us for the current version."],
+      ],
+      noticeTitle: "Under review",
+      notice: "The full booking terms are under legal and operational review. This page will be updated when that is complete.",
+    },
+  },
+}[kind][lang];
+---
+
+<Base route={route} lang={lang} title={DATA.title} description={DATA.desc}>
+  <section class="section--tall" data-surface="light" data-reveal>
+    <div class="wrap">
+      <p class="eyebrow">{DATA.eyebrow}</p>
+      <h1 class="sec__title">{DATA.h1}</h1>
+      <p class="sec__lead">{DATA.lead}</p>
+    </div>
+  </section>
+
+  <section class="section" data-surface="sand" data-reveal>
+    <div class="wrap prose">
+      {DATA.sections.map(([h, p]) => (
+        <>
+          <h2>{h}</h2>
+          <p>{p}</p>
+        </>
+      ))}
+      <Notice title={DATA.noticeTitle}><p>{DATA.notice}</p></Notice>
+      <div class="band-cta band-cta--start">
+        <WhatsAppCTA lang={lang} label={lang === "bm" ? "Hubungi kami" : "Contact us"} product={lang === "bm" ? "Pertanyaan am" : "General enquiry"} />
+        <a class="pill" href={href("contact", lang)}>{lang === "bm" ? "Hubungi" : "Contact"}</a>
+      </div>
+      <p class="legal-foot">{COMPANY.legalName} · {COMPANY.licenceLabel}</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .legal-foot {
+    margin-top: 3rem;
+    font-size: var(--text-caption);
+    letter-spacing: 0.04em;
+    color: var(--color-ink-muted);
+  }
+</style>

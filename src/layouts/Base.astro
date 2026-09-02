@@ -1,0 +1,300 @@
+---
+/**
+ * The one shell every page uses. Header, footer and nav are lifted once and
+ * stamped identically — v1 hardcoded content into 34 separate .astro files,
+ * which is how prices, tokens and blockers leaked into public HTML.
+ */
+import "../styles/theme.css";
+import SEOHead from "../components/SEOHead.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import { assertParity, ROUTES, type RouteId, type Lang } from "../lib/routes";
+
+interface Props {
+  route?: RouteId;
+  path?: string;
+  twinPath?: string;
+  lang: Lang;
+  title: string;
+  description: string;
+  /** Which surface dominates this page. Drives the depth ramp. */
+  depth?: "surface" | "shallow" | "reef" | "deep" | "abyss";
+  ogImage?: string;
+}
+
+// Fails the build if any route lost its language twin (defect #11).
+assertParity();
+
+const { route, path, twinPath, lang, title, description, ogImage } = Astro.props;
+const depth = Astro.props.depth ?? (route ? ROUTES[route].depth : "surface");
+const htmlLang = lang === "bm" ? "ms-MY" : "en-MY";
+const skipLabel = lang === "bm" ? "Terus ke kandungan utama" : "Skip to main content";
+---
+
+<!doctype html>
+<html lang={htmlLang} data-depth={depth}>
+  <head>
+    <SEOHead
+      route={route}
+      path={path}
+      twinPath={twinPath}
+      lang={lang}
+      title={title}
+      description={description}
+      ogImage={ogImage}
+    />
+    <noscript>
+      <style>[data-reveal]{opacity:1 !important;transform:none !important;}</style>
+    </noscript>
+  </head>
+
+  <body>
+    <a class="skip" href="#main">{skipLabel}</a>
+
+    <SiteHeader lang={lang} route={route} path={path} twinPath={twinPath} />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <SiteFooter lang={lang} />
+
+    <script>
+      import { initMotion } from "../lib/motion";
+      initMotion();
+    </script>
+
+    <style is:global>
+      /* ---- Layout primitives ---- */
+      .wrap {
+        width: 100%;
+        max-width: var(--page-max);
+        margin-inline: auto;
+        padding-inline: 1.5rem;
+      }
+      @media (min-width: 768px)  { .wrap { padding-inline: 3rem; } }
+      @media (min-width: 1200px) { .wrap { padding-inline: 4rem; } }
+
+      /* Section padding floor is 48px. Never lower — it breaks the pacing. */
+      .section { padding-block: clamp(3rem, 8vw, 5rem); }
+      .section--tall { padding-block: clamp(4rem, 11vw, 7.5rem); }
+
+      /* ---- The two-tone oscillation. Hard cuts, never gradients. ---- */
+      [data-surface="light"] { background: var(--color-snow);      color: var(--color-ink); }
+      [data-surface="sand"]  { background: var(--color-parchment); color: var(--color-ink); }
+      [data-surface="mid"]   { background: var(--color-deep-mid);  color: var(--color-paper); }
+      [data-surface="dark"]  { background: var(--color-deep);      color: var(--color-paper); }
+      [data-surface="abyss"] { background: var(--color-deep-mid);  color: var(--color-paper); }
+
+      /* ---- Eyebrow: uppercase, tracked, gold rule beneath ---- */
+      .eyebrow {
+        font-family: var(--font-body);
+        font-size: var(--text-caption);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.17em;
+        color: var(--color-ink-muted);
+        margin: 0 0 1.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .eyebrow::after {
+        content: "";
+        flex: 0 0 24px;
+        height: 1px;
+        background: var(--color-gold);
+      }
+      [data-surface="dark"] .eyebrow,
+      [data-surface="mid"] .eyebrow,
+      [data-surface="abyss"] .eyebrow {
+        color: var(--color-paper-muted);
+      }
+      [data-surface="dark"] .eyebrow::after,
+      [data-surface="mid"] .eyebrow::after,
+      [data-surface="abyss"] .eyebrow::after {
+        background: var(--color-gold-soft);
+      }
+      /* Centred editorial stacks pass .eyebrow--center to mirror the rule. */
+      .eyebrow--center { justify-content: center; }
+      .eyebrow--center::before {
+        content: "";
+        flex: 0 0 24px;
+        height: 1px;
+        background: var(--color-gold);
+      }
+      .eyebrow--center::after { background: var(--color-gold); }
+      [data-surface="dark"] .eyebrow--center::before,
+      [data-surface="mid"] .eyebrow--center::before,
+      [data-surface="abyss"] .eyebrow--center::before {
+        background: var(--color-gold-soft);
+      }
+
+      /* ---- Reveal: fade + 24px rise, once ---- */
+      [data-reveal] {
+        opacity: 0;
+        transform: translateY(24px);
+        transition:
+          opacity var(--dur-enter) var(--ease-water),
+          transform var(--dur-enter) var(--ease-water);
+      }
+      [data-reveal][data-revealed] { opacity: 1; transform: none; }
+      /* If the motion chunk fails or never loads, sections must still show. */
+      @media (scripting: none) {
+        [data-reveal] { opacity: 1 !important; transform: none !important; }
+      }
+
+      /* ---- Skip link ---- */
+      .skip {
+        position: absolute;
+        left: 1rem;
+        top: -100%;
+        z-index: 100;
+        padding: 0.75rem 1.5rem;
+        border-radius: var(--radius-pill);
+        background: var(--color-deep);
+        color: var(--color-paper);
+        text-decoration: none;
+        font-size: var(--text-body-sm);
+        transition: top var(--dur-micro) var(--ease-micro);
+      }
+      .skip:focus-visible { top: 1rem; }
+
+      /* Anchor jumps (#main skip link, hero #pakej, any in-page anchor) must
+         land below the sticky header, not behind it. --hdr-h tracks its height. */
+      :target,
+      [id] { scroll-margin-top: calc(var(--hdr-h, 8rem) + 1rem); }
+
+      /* ---- Editorial section heading + lead (homepage bands) ---- */
+      .sec__title {
+        font-size: clamp(2.25rem, 4.5vw, 3.25rem);
+        line-height: 1.12;
+        max-width: 20ch;
+      }
+      .sec__title--center { margin-inline: auto; }
+      .sec__lead {
+        margin-top: 1.5rem;
+        font-size: var(--text-body);
+        line-height: 1.7;
+        max-width: 58ch;
+        color: var(--color-ink-muted);
+      }
+      .sec__lead--center { margin-inline: auto; }
+      [data-surface="dark"] .sec__lead,
+      [data-surface="mid"] .sec__lead { color: var(--color-paper-muted); }
+
+      /* ---- Shared CTA row ---- */
+      .band-cta {
+        margin-top: 3rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem 1.75rem;
+      }
+      .band-cta--start { justify-content: flex-start; }
+      .band-cta--center { justify-content: center; }
+
+      /* Outlined pill for in-page links (WhatsAppCTA owns the WA pills). */
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0.75rem 1.75rem;
+        border: 1.5px solid var(--color-border-light);
+        border-radius: var(--radius-pill);
+        font-size: var(--text-caption);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--color-ink);
+        text-decoration: none;
+        white-space: nowrap;
+        transition:
+          background-color var(--dur-micro) var(--ease-micro),
+          color var(--dur-micro) var(--ease-micro);
+      }
+      .pill:hover { background: var(--color-deep); color: var(--color-paper); }
+      [data-surface="dark"] .pill,
+      [data-surface="mid"] .pill,
+      [data-surface="abyss"] .pill {
+        border-color: var(--color-border-dark);
+        color: var(--color-paper);
+      }
+      [data-surface="dark"] .pill:hover,
+      [data-surface="mid"] .pill:hover,
+      [data-surface="abyss"] .pill:hover {
+        background: var(--color-paper);
+        color: var(--color-deep);
+      }
+
+      /* ---- Shared content primitives (inner pages) ---- */
+      .prose > * + * { margin-top: 1.25rem; }
+      .prose p { font-size: var(--text-body); line-height: 1.7; max-width: 62ch; }
+      .prose h2 { font-size: clamp(1.75rem, 3.2vw, 2.25rem); margin-top: 2.75rem; }
+      .prose h3 {
+        font-family: var(--font-body); font-weight: 600;
+        font-size: var(--text-subheading); margin-top: 2rem;
+      }
+      .prose ul, .prose ol { margin: 0; padding-left: 1.25rem; max-width: 62ch; }
+      .prose li { margin-top: 0.5rem; line-height: 1.65; }
+      .prose a { color: var(--color-link, var(--color-deep-lift)); }
+      [data-surface="dark"] .prose a,
+      [data-surface="mid"] .prose a { color: var(--color-gold-soft); }
+
+      /* Paired inclusions / exclusions — always shown together (Phase 5). */
+      .pair {
+        display: grid;
+        gap: 2.5rem;
+        margin-top: 2rem;
+      }
+      @media (min-width: 720px) { .pair { grid-template-columns: 1fr 1fr; } }
+      .pair__col h3 {
+        font-family: var(--font-body);
+        font-size: var(--text-caption);
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--color-ink-muted);
+        margin-bottom: 1rem;
+      }
+      [data-surface="dark"] .pair__col h3,
+      [data-surface="mid"] .pair__col h3 { color: var(--color-paper-muted); }
+      .pair__col ul { list-style: none; margin: 0; padding: 0; }
+      .pair__col li {
+        padding: 0.6rem 0;
+        border-top: 1px solid var(--color-rule-light);
+        font-size: var(--text-body-sm);
+        line-height: 1.6;
+      }
+      [data-surface="dark"] .pair__col li,
+      [data-surface="mid"] .pair__col li { border-top-color: var(--color-rule-dark); }
+      .pair__col li::before { content: "— "; color: var(--color-gold); }
+
+      /* Simple key/value fact list for resort + product detail. */
+      .facts { margin: 2rem 0 0; display: grid; gap: 0; }
+      .facts div {
+        display: grid;
+        grid-template-columns: minmax(0, 12rem) 1fr;
+        gap: 1rem 1.5rem;
+        padding: 0.9rem 0;
+        border-top: 1px solid var(--color-rule-light);
+      }
+      .facts div:last-child { border-bottom: 1px solid var(--color-rule-light); }
+      [data-surface="dark"] .facts div,
+      [data-surface="dark"] .facts div:last-child { border-color: var(--color-rule-dark); }
+      .facts dt {
+        font-size: var(--text-caption);
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--color-ink-muted);
+      }
+      [data-surface="dark"] .facts dt { color: var(--color-paper-muted); }
+      .facts dd { margin: 0; font-size: var(--text-body-sm); line-height: 1.6; }
+      @media (max-width: 559px) {
+        .facts div { grid-template-columns: 1fr; gap: 0.35rem; }
+      }
+    </style>
+  </body>
+</html>

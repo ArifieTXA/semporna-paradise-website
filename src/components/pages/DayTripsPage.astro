@@ -1,0 +1,176 @@
+---
+/**
+ * P004 — Lawatan Harian Pulau / Island Day Trips.
+ *
+ * Four controlled routes. Two market prices each (Malaysian citizen /
+ * non-Malaysian), both through <Gated>. The life jacket is never priced and
+ * never dropped — it is an exclusion with no amount (Phase 5: unknown is not
+ * the same as excluded).
+ */
+import Base from "../../layouts/Base.astro";
+import Gated from "../Gated.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import Notice from "../Notice.astro";
+import Img from "../Img.astro";
+import {
+  DAY_TRIPS,
+  DAYTRIP_INCLUSIONS,
+  DAYTRIP_EXCLUSIONS,
+  dayTripCode,
+} from "../../data/products";
+import type { Lang } from "../../lib/gated";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  bm: {
+    title: "Lawatan Harian Pulau",
+    desc: "Empat laluan lawatan harian pulau di sekitar Semporna — Tun Sakaran, kawasan Mabul, Mataking dan Timbun Mata. Harga warganegara Malaysia dan antarabangsa disenaraikan.",
+    eyebrow: "Lawatan harian",
+    h1: "Empat laluan pulau, satu hari",
+    lead: "Bertolak pagi, pulang petang. Bot, makan tengah hari, pemandu, bayaran jeti dan set snorkeling termasuk pada setiap laluan.",
+    inclHead: "Termasuk pada setiap laluan",
+    exclHead: "Tidak termasuk",
+    local: "Warganegara Malaysia",
+    intl: "Antarabangsa",
+    perPerson: "seorang",
+    dest: "Singgahan",
+    jacketTitle: "Jaket keselamatan",
+    jacket: "Jaket keselamatan tidak termasuk dan perlu disewa. Kadar dikenakan setiap hari dan disahkan semasa pertanyaan.",
+    marketTitle: "Harga ikut kategori",
+    market: "Harga bergantung pada kewarganegaraan peserta. Nyatakan bilangan peserta warganegara Malaysia dan antarabangsa semasa pertanyaan.",
+    ask: "Tanya laluan ini",
+  },
+  en: {
+    title: "Island Day Trips",
+    desc: "Four controlled island day-trip routes around Semporna — Tun Sakaran, the Mabul area, Mataking and Timbun Mata. Malaysian-citizen and international prices are listed.",
+    eyebrow: "Day trips",
+    h1: "Four island routes, one day",
+    lead: "Leave in the morning, back by evening. Boat, lunch, guide, jetty fee and a snorkelling set are included on every route.",
+    inclHead: "Included on every route",
+    exclHead: "Not included",
+    local: "Malaysian citizen",
+    intl: "International",
+    perPerson: "per person",
+    dest: "Stops",
+    jacketTitle: "Life jacket",
+    jacket: "The life jacket is not included and must be rented. The rate is charged per day and is confirmed at enquiry.",
+    marketTitle: "Price by category",
+    market: "Price depends on each traveller's nationality. State how many travellers are Malaysian citizens and how many are international when you enquire.",
+    ask: "Ask about this route",
+  },
+}[lang];
+---
+
+<Base route="dayTrips" lang={lang} title={c.title} description={c.desc}>
+  <section class="section--tall" data-surface="sand" data-reveal>
+    <div class="wrap ph2">
+      <div>
+        <p class="eyebrow">{c.eyebrow}</p>
+        <h1 class="sec__title">{c.h1}</h1>
+        <p class="sec__lead">{c.lead}</p>
+      </div>
+      <figure class="ph2__media">
+        <Img
+          slot="harian-hero"
+          alt={lang === "bm"
+            ? "Bot tradisional di atas air pirus yang tenang di antara pulau batu kapur berhutan."
+            : "A traditional boat on calm turquoise water between forested limestone islands."}
+          hero
+          sizes="(min-width: 900px) 45vw, 100vw"
+        />
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" data-surface="light" data-reveal>
+    <div class="wrap">
+      <ul class="routes">
+        {DAY_TRIPS.map((trip) => (
+          <li class="route">
+            <div class="route__head">
+              <h2 class="route__name">{trip.area[lang]}</h2>
+              <p class="route__dest">
+                <span>{c.dest}:</span> {trip.destinations.join(" · ")}
+              </p>
+            </div>
+            <dl class="route__prices">
+              <div>
+                <dt>{c.local}</dt>
+                <dd><Gated value={trip.local} kind="price" blocker="B02" lang={lang} /> <span>/ {c.perPerson}</span></dd>
+              </div>
+              <div>
+                <dt>{c.intl}</dt>
+                <dd><Gated value={trip.intl} kind="price" blocker="B02" lang={lang} /> <span>/ {c.perPerson}</span></dd>
+              </div>
+            </dl>
+            <WhatsAppCTA
+              lang={lang}
+              variant="ghost"
+              code={dayTripCode(trip, "LCL")}
+              product={trip.area[lang]}
+              label={c.ask}
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" data-surface="sand" data-reveal>
+    <div class="wrap">
+      <div class="pair">
+        <div class="pair__col">
+          <h3>{c.inclHead}</h3>
+          <ul>{DAYTRIP_INCLUSIONS[lang].map((i) => <li>{i}</li>)}</ul>
+        </div>
+        <div class="pair__col">
+          <h3>{c.exclHead}</h3>
+          <ul>{DAYTRIP_EXCLUSIONS[lang].map((i) => <li>{i}</li>)}</ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" data-surface="light" data-reveal>
+    <div class="wrap notices">
+      <Notice title={c.jacketTitle}><p>{c.jacket}</p></Notice>
+      <Notice title={c.marketTitle} tone="neutral"><p>{c.market}</p></Notice>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .ph2 { display: grid; gap: 3rem; }
+  @media (min-width: 900px) {
+    .ph2 { grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); align-items: center; gap: 4rem; }
+  }
+  .ph2__media { margin: 0; }
+  .ph2__media :global(.img img) { border-radius: var(--radius-card); }
+
+  .routes { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  .route {
+    display: grid;
+    gap: 1.5rem 2rem;
+    padding: 2rem 0;
+    border-top: 1px solid var(--color-rule-light);
+    align-items: center;
+  }
+  .route:last-child { border-bottom: 1px solid var(--color-rule-light); }
+  @media (min-width: 860px) {
+    .route { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.4fr) auto; }
+  }
+  .route__name { font-size: var(--text-heading-sm); line-height: 1.2; }
+  .route__dest { margin-top: 0.4rem; font-size: var(--text-body-sm); color: var(--color-ink-muted); }
+  .route__dest span { font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.6875rem; }
+  .route__prices { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0; }
+  .route__prices dt {
+    font-size: 0.625rem; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--color-ink-muted); margin-bottom: 0.3rem;
+  }
+  .route__prices dd { margin: 0; font-size: var(--text-body); font-variant-numeric: tabular-nums; }
+  .route__prices dd span { font-size: var(--text-body-sm); color: var(--color-ink-muted); }
+
+  .notices { display: grid; gap: 2rem; }
+</style>

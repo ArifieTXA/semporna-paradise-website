@@ -1,0 +1,144 @@
+---
+/**
+ * P007 — Tentang Kami / About Us.
+ *
+ * Company role and the local service model. No founder story with a generated
+ * face (DESIGN.md §7), no unverified history, no licence validity claim. The
+ * hero plate is a generic stilt-village blue-hour scene, captioned.
+ */
+import Base from "../../layouts/Base.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import Img from "../Img.astro";
+import { COMPANY } from "../../data/config";
+import { href } from "../../lib/routes";
+import type { Lang } from "../../lib/gated";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  bm: {
+    title: "Tentang Kami",
+    desc: "Semporna Paradise Travel & Tours Sdn Bhd ialah pengendali lawatan marin di Semporna, Sabah. Kami beri maklumat, kemudian uruskan tempahan anda terus melalui WhatsApp.",
+    eyebrow: "Tentang kami",
+    h1: "Pengendali lawatan di Semporna",
+    lead: "Kami berpangkalan di Semporna dan menyusun pakej resort, lawatan harian pulau dan selam di perairan sekitar.",
+    role: [
+      { h: "Apa yang kami buat", p: "Kami menyusun penginapan resort, pengangkutan lapangan terbang dan bot, lawatan harian pulau di laluan terkawal, dan aktiviti selam. Setiap pakej dijual di bawah kod tetap." },
+      { h: "Cara ia berfungsi", p: "Laman web ini memberi maklumat dan harga. Ia tidak menjual dalam talian dan tiada pembayaran diterima di sini. Setiap pertanyaan diteruskan kepada pasukan kami di WhatsApp untuk semakan dan sebut harga." },
+      { h: "Setempat", p: "Pasukan kami berada di Semporna. Kami mengendalikan pengangkutan, jeti dan hubungan resort secara terus, bukan melalui perantara." },
+    ],
+    journeyHead: "Urutan tempahan",
+    journey: [
+      "Hantar pertanyaan dengan tarikh dan bilangan peserta.",
+      "Kami semak ketersediaan bilik, permit dan slot.",
+      "Kami berikan sebut harga.",
+      "Arahan pembayaran diberikan secara peribadi.",
+      "Tempahan disahkan selepas bayaran diterima.",
+    ],
+    cta: "Mula pertanyaan",
+    trustLink: "Kepercayaan & keselamatan",
+    imgAlt: "Perkampungan atas air pada waktu senja biru dengan cahaya lampu hangat di beberapa tingkap.",
+    imgCaption: "Imej dijana. Suasana perairan Semporna, bukan lokasi tertentu.",
+  },
+  en: {
+    title: "About Us",
+    desc: "Semporna Paradise Travel & Tours Sdn Bhd is a marine tour operator in Semporna, Sabah. We give you the information, then handle your booking directly on WhatsApp.",
+    eyebrow: "About us",
+    h1: "A tour operator in Semporna",
+    lead: "We are based in Semporna and put together resort packages, island day trips and diving in the surrounding water.",
+    role: [
+      { h: "What we do", p: "We arrange resort accommodation, airport and boat transport, island day trips on controlled routes, and diving activities. Every package is sold under a fixed code." },
+      { h: "How it works", p: "This website gives information and prices. It does not sell online and takes no payment here. Every enquiry goes to our team on WhatsApp for checking and a quote." },
+      { h: "Local", p: "Our team is in Semporna. We handle transport, the jetty and resort relationships directly, not through a middleman." },
+    ],
+    journeyHead: "The booking sequence",
+    journey: [
+      "Send an enquiry with your dates and party size.",
+      "We check room, permit and slot availability.",
+      "We send a quote.",
+      "Payment instructions are given privately.",
+      "The booking is confirmed once payment is received.",
+    ],
+    cta: "Start an enquiry",
+    trustLink: "Trust & safety",
+    imgAlt: "A stilt water village at blue hour with warm lamplight in a few windows.",
+    imgCaption: "Generated image. The feel of the Semporna water, not a specific location.",
+  },
+}[lang];
+---
+
+<Base route="about" lang={lang} title={c.title} description={c.desc}>
+  <section class="section--tall" data-surface="dark" data-reveal>
+    <div class="wrap ph2">
+      <div>
+        <p class="eyebrow">{c.eyebrow}</p>
+        <h1 class="sec__title">{c.h1}</h1>
+        <p class="sec__lead">{c.lead}</p>
+      </div>
+      <figure class="ph2__media">
+        <Img slot="tentang-hero" alt={c.imgAlt} hero sizes="(min-width: 900px) 45vw, 100vw" />
+        <figcaption>{c.imgCaption}</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" data-surface="sand" data-reveal>
+    <div class="wrap">
+      <div class="roles">
+        {c.role.map((r) => (
+          <div class="role">
+            <h2 class="role__h">{r.h}</h2>
+            <p class="role__p">{r.p}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section" data-surface="light" data-reveal>
+    <div class="wrap prose">
+      <h2>{c.journeyHead}</h2>
+      <ol class="seq">
+        {c.journey.map((s, i) => (
+          <li><span aria-hidden="true">{String(i + 1).padStart(2, "0")}</span><p>{s}</p></li>
+        ))}
+      </ol>
+      <div class="band-cta band-cta--start">
+        <WhatsAppCTA lang={lang} label={c.cta} product={lang === "bm" ? "Pertanyaan umum" : "General enquiry"} />
+        <a class="pill" href={href("trust", lang)}>{c.trustLink}</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .ph2 { display: grid; gap: 3rem; }
+  @media (min-width: 900px) {
+    .ph2 { grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); align-items: center; gap: 4rem; }
+  }
+  .ph2__media { margin: 0; }
+  .ph2__media :global(.img img) { border-radius: var(--radius-card); }
+  .ph2__media figcaption { margin-top: 0.75rem; font-size: var(--text-caption); color: var(--color-paper-muted); }
+
+  .roles { display: grid; gap: 0; }
+  @media (min-width: 860px) { .roles { grid-template-columns: repeat(3, 1fr); gap: 0; } }
+  .role { padding: 1.75rem 0; border-top: 1px solid var(--color-rule-light); }
+  @media (min-width: 860px) {
+    .role { padding: 0 2rem; border-top: 0; }
+    .role:first-child { padding-left: 0; }
+    .role:last-child { padding-right: 0; }
+    .role + .role { border-left: 1px solid var(--color-rule-light); }
+  }
+  .role__h { font-family: var(--font-body); font-weight: 600; font-size: var(--text-subheading); }
+  .role__p { margin-top: 0.75rem; font-size: var(--text-body-sm); line-height: 1.7; color: var(--color-ink-muted); }
+
+  .seq { list-style: none; margin: 1.5rem 0 0; padding: 0; }
+  .seq li {
+    display: grid; grid-template-columns: 2.5rem 1fr; gap: 1.25rem;
+    padding: 1rem 0; border-top: 1px solid var(--color-rule-light); align-items: baseline;
+  }
+  .seq li:last-child { border-bottom: 1px solid var(--color-rule-light); }
+  .seq span { font-size: var(--text-caption); font-weight: 600; letter-spacing: 0.12em; color: var(--color-gold); }
+  .seq p { font-size: var(--text-body-sm); line-height: 1.6; }
+</style>

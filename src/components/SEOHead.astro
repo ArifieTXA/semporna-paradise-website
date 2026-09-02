@@ -1,0 +1,100 @@
+---
+/**
+ * One source of truth for SEO. Canonical and hreflang are DERIVED from the
+ * route map — never passed per page.
+ *
+ * Fixes v1 defects #1 (every page claimed the homepage as canonical),
+ * #2 (hreflang always pointed at / and /en) and #8 (<meta charset> came after
+ * <title>, outside the first 1024 bytes).
+ */
+import { SITE_URL, COMPANY, WHATSAPP, SOCIAL } from "../data/config";
+import { ROUTES, type RouteId, type Lang } from "../lib/routes";
+
+interface Props {
+  /** Either a known route, or an explicit path for a dynamic page. */
+  route?: RouteId;
+  path?: string;
+  twinPath?: string;
+  lang: Lang;
+  title: string;
+  description: string;
+  ogImage?: string;
+}
+
+const { route, path, twinPath, lang, title, description, ogImage } = Astro.props;
+
+if (!route && (!path || !twinPath)) {
+  throw new Error("[SEOHead] pass a `route`, or both `path` and `twinPath`.");
+}
+
+const selfPath = route ? ROUTES[route][lang] : path!;
+const otherPath = route ? ROUTES[route][lang === "bm" ? "en" : "bm"] : twinPath!;
+
+const canonical = new URL(selfPath, SITE_URL).href;
+const alternate = new URL(otherPath, SITE_URL).href;
+
+const bmHref = lang === "bm" ? canonical : alternate;
+const enHref = lang === "en" ? canonical : alternate;
+
+const fullTitle = `${title} — ${COMPANY.shortName}`;
+const ogUrl = new URL(ogImage ?? "/img/og-share-1440.webp", SITE_URL).href;
+const htmlLang = lang === "bm" ? "ms-MY" : "en-MY";
+
+/**
+ * TravelAgency schema. Only fields we can evidence:
+ *  - the licence is a LABEL under `identifier`, never a claim of validity (rule 4).
+ *  - `telephone` lists the confirmed WhatsApp numbers in E.164.
+ *  - NO `email` — none is confirmed (rule 8).
+ *  - `sameAs` points at the public social profiles.
+ */
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "TravelAgency",
+  name: COMPANY.legalName,
+  alternateName: COMPANY.shortName,
+  slogan: COMPANY.tagline,
+  url: new URL(lang === "bm" ? "/" : "/en/", SITE_URL).href,
+  identifier: COMPANY.licenceLabel,
+  areaServed: "Semporna, Sabah, Malaysia",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Jeti Pelancongan, Jalan Bangau-Bangau",
+    postalCode: "91308",
+    addressLocality: "Semporna",
+    addressRegion: "Sabah",
+    addressCountry: "MY",
+  },
+  telephone: WHATSAPP.map((w) => `+${w.e164}`),
+  sameAs: [SOCIAL.facebook, SOCIAL.instagram, SOCIAL.tiktok],
+};
+---
+
+{/* charset first, inside the first 1024 bytes. Defect #8. */}
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+
+<link rel="canonical" href={canonical} />
+<link rel="alternate" hreflang="ms-MY" href={bmHref} />
+<link rel="alternate" hreflang="en-MY" href={enHref} />
+<link rel="alternate" hreflang="x-default" href={bmHref} />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={COMPANY.legalName} />
+<meta property="og:locale" content={htmlLang.replace("-", "_")} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogUrl} />
+<meta name="twitter:card" content="summary_large_image" />
+
+<meta name="theme-color" content="#193741" />
+
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+<link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

@@ -1,0 +1,54 @@
+---
+/**
+ * A calm hairline callout for the conditions this business must state and never
+ * dress up: prices confirmed at enquiry, availability on request, a duration
+ * that is an estimate, a permit that must be verified.
+ *
+ * It is never an alarm. No red, no icon shouting. A gold rule on the left,
+ * the same type as body copy. Phase 5: state the limit plainly.
+ */
+interface Props {
+  title?: string;
+  tone?: "neutral" | "gold";
+}
+const { title, tone = "gold" } = Astro.props;
+---
+
+<aside class:list={["notice", `notice--${tone}`]}>
+  {title && <p class="notice__title">{title}</p>}
+  <div class="notice__body"><slot /></div>
+</aside>
+
+<style>
+  .notice {
+    padding: 1.25rem 0 1.25rem 1.5rem;
+    border-left: 2px solid var(--color-gold);
+    max-width: 60ch;
+  }
+  .notice--neutral { border-left-color: var(--color-rule-light); }
+  [data-surface="dark"] .notice--neutral,
+  [data-surface="mid"] .notice--neutral,
+  [data-surface="abyss"] .notice--neutral { border-left-color: var(--color-rule-dark); }
+  [data-surface="dark"] .notice--gold,
+  [data-surface="mid"] .notice--gold,
+  [data-surface="abyss"] .notice--gold { border-left-color: var(--color-gold-soft); }
+
+  .notice__title {
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+    margin-bottom: 0.5rem;
+  }
+  [data-surface="dark"] .notice__title,
+  [data-surface="mid"] .notice__title,
+  [data-surface="abyss"] .notice__title { color: var(--color-paper-muted); }
+
+  .notice__body :global(p) {
+    font-size: var(--text-body-sm);
+    line-height: 1.7;
+    margin: 0;
+  }
+  .notice__body :global(p + p) { margin-top: 0.75rem; }
+</style>

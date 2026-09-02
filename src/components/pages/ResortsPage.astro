@@ -1,0 +1,210 @@
+---
+/**
+ * P017 — Senarai Resort / Resort Index.
+ *
+ * Lists every resort as a hairline menu row (never a card grid — DESIGN.md §4,
+ * v1 defect #18). No unverified attribute is asserted here: each row shows the
+ * name, the room type, and the "from" price through <Gated>. Facilities and
+ * capacity live on the detail page, behind their own fallbacks.
+ *
+ * DESIGN.md §7: the imagery on this page and the detail pages is generic water,
+ * texture and seascape. No generated building is captioned as a named resort.
+ */
+import Base from "../../layouts/Base.astro";
+import Gated from "../Gated.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import Notice from "../Notice.astro";
+import Img from "../Img.astro";
+import { RESORTS, fromPrice } from "../../data/resorts";
+import { resortDetailPath } from "../../lib/routes";
+import type { Lang } from "../../lib/gated";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const rows = [...RESORTS].sort((a, b) => {
+  const pa = fromPrice(a);
+  const pb = fromPrice(b);
+  if (pa === null) return 1;
+  if (pb === null) return -1;
+  return pa - pb;
+});
+
+const c = {
+  bm: {
+    title: "Senarai Resort",
+    desc: "Senarai penuh resort atas air dan resort pulau di Semporna yang boleh ditempah melalui Semporna Paradise. Harga bermula setiap orang untuk setiap resort.",
+    eyebrow: "Resort",
+    h1: "Resort di perairan Semporna",
+    lead: "Setiap resort di sini boleh ditempah melalui kami. Klik satu resort untuk fakta yang disahkan dan harga penuh setiap tempoh.",
+    from: "Dari",
+    perPerson: "seorang",
+    view: "Lihat resort",
+    noticeTitle: "Tentang gambar di halaman ini",
+    notice: "Gambar di halaman resort menunjukkan laut, tekstur dan suasana kawasan Semporna. Ia bukan foto bangunan resort tertentu. Minta gambar semasa resort pilihan anda melalui WhatsApp.",
+    ctaLabel: "Tanya tentang resort",
+    ctaProduct: "Pemilihan resort",
+    imgAlt: "Jeti kayu menganjur ke air pirus yang jernih pada waktu pagi di kawasan Semporna.",
+    imgCaption: "Imej dijana. Suasana kawasan Semporna, bukan resort tertentu.",
+  },
+  en: {
+    title: "Resorts",
+    desc: "The full list of water and island resorts in Semporna bookable through Semporna Paradise. From-price per person for each resort.",
+    eyebrow: "Resorts",
+    h1: "Resorts across the Semporna water",
+    lead: "Every resort here is bookable through us. Open a resort for verified facts and the full price at each length of stay.",
+    from: "From",
+    perPerson: "per person",
+    view: "View resort",
+    noticeTitle: "About the images on this page",
+    notice: "Images on the resort pages show the sea, texture and feel of the Semporna area. They are not photographs of a specific resort building. Ask for current photos of your chosen resort on WhatsApp.",
+    ctaLabel: "Ask about a resort",
+    ctaProduct: "Resort selection",
+    imgAlt: "A wooden jetty reaching into clear turquoise water on a calm morning in the Semporna area.",
+    imgCaption: "Generated image. The feel of the Semporna area, not a specific resort.",
+  },
+}[lang];
+---
+
+<Base route="resorts" lang={lang} title={c.title} description={c.desc}>
+  <section class="section--tall" data-surface="sand" data-reveal>
+    <div class="wrap">
+      <p class="eyebrow">{c.eyebrow}</p>
+      <h1 class="sec__title">{c.h1}</h1>
+      <p class="sec__lead">{c.lead}</p>
+    </div>
+  </section>
+
+  <section class="section" data-surface="light" data-reveal>
+    <div class="wrap">
+      <ul class="rlist">
+        {rows.map((r) => {
+          const p = fromPrice(r);
+          return (
+            <li>
+              <a class="rrow" href={resortDetailPath(r.slug, lang)}>
+                <span class="rrow__name">
+                  <span class="rrow__mark" aria-hidden="true"></span>
+                  <span>
+                    <span class="rrow__title">{r.name}</span>
+                    <span class="rrow__room">{r.room}</span>
+                  </span>
+                </span>
+                <span class="rrow__price">
+                  <span class="rrow__k">{c.from}</span>
+                  <Gated value={p} kind="price" blocker={r.blockers?.[0]} lang={lang} />
+                  {p !== null && <span class="rrow__per"> / {c.perPerson}</span>}
+                </span>
+                <span class="rrow__go" aria-hidden="true">{c.view} &rarr;</span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section band-bleed" data-surface="mid" data-reveal>
+    <div class="band-bleed__grid">
+      <div class="band-bleed__text">
+        <Notice title={c.noticeTitle} tone="neutral">
+          <p>{c.notice}</p>
+        </Notice>
+        <div class="band-cta band-cta--start">
+          <WhatsAppCTA lang={lang} label={c.ctaLabel} product={c.ctaProduct} />
+        </div>
+      </div>
+      <figure class="band-bleed__media band-bleed__media--right">
+        <Img slot="resort-generic-2" alt={c.imgAlt} sizes="(min-width: 960px) 50vw, 100vw" />
+        <figcaption>{c.imgCaption}</figcaption>
+      </figure>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .rlist { list-style: none; margin: 0; padding: 0; }
+  .rrow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 1.5rem 2rem;
+    padding: 1.5rem 0.75rem;
+    margin-inline: -0.75rem;
+    border-bottom: 1px solid var(--color-rule-light);
+    text-decoration: none;
+    color: var(--color-ink);
+    transition: background-color var(--dur-micro) var(--ease-micro);
+  }
+  .rrow:hover { background: var(--color-parchment); }
+  .rrow__name { display: flex; align-items: baseline; gap: 0.875rem; min-width: 0; }
+  .rrow__mark {
+    flex: none; width: 6px; height: 6px;
+    background: var(--color-gold);
+    transform: rotate(45deg) translateY(-2px);
+  }
+  .rrow__title {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--text-heading-sm);
+    line-height: 1.15;
+  }
+  .rrow__room {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+  }
+  .rrow__price { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rrow__k {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+    margin-right: 0.4rem;
+  }
+  .rrow__per { color: var(--color-ink-muted); font-size: var(--text-body-sm); }
+  .rrow__go {
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+    white-space: nowrap;
+  }
+  @media (max-width: 719px) {
+    .rrow { grid-template-columns: 1fr auto; }
+    .rrow__go { display: none; }
+  }
+
+  /* Local copy of the homepage bleed grid so this page is self-contained. */
+  .band-bleed { overflow-x: clip; }
+  .band-bleed__grid {
+    max-width: var(--page-max);
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+    display: grid;
+    gap: 3rem;
+    align-items: center;
+  }
+  @media (min-width: 768px) { .band-bleed__grid { padding-inline: 3rem; } }
+  @media (min-width: 960px) {
+    .band-bleed__grid { grid-template-columns: 1fr 1fr; gap: 4rem; }
+    .band-bleed__media--right {
+      margin-right: min(-3rem, calc((var(--page-max) - 100vw) / 2 - 4rem));
+    }
+  }
+  @media (max-width: 959px) { .band-bleed__media { margin-inline: -1.5rem; } }
+  .band-bleed__media img { width: 100%; min-height: 320px; object-fit: cover; }
+  .band-bleed__media figcaption {
+    margin-top: 0.75rem;
+    font-size: var(--text-caption);
+    color: var(--color-paper-muted);
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 960px) { .band-bleed__media figcaption { padding-inline: 0; } }
+</style>

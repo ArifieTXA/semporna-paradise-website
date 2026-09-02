@@ -1,0 +1,61 @@
+---
+/**
+ * <Gated> — the component that makes v1 defect #7 structurally impossible.
+ *
+ * Every price, capacity, facility and availability value on this site renders
+ * through here. `blocker` is a build-time attribute used only for the console
+ * warning; it CANNOT reach the DOM, because no code path below writes it.
+ *
+ *   <Gated value={resort.prices["3D2N"]} kind="price" blocker="B02" lang={lang} />
+ */
+import { resolveGated, warnGated, type FallbackKind, type Lang } from "../lib/gated";
+
+interface Props {
+  value: number | string | null | undefined;
+  kind?: FallbackKind;
+  /** Blocker id, e.g. "B02". Build-time only. Never rendered. */
+  blocker?: string;
+  lang: Lang;
+  /** Optional element to render as. Defaults to <span>. */
+  as?: "span" | "strong" | "p" | "td" | "dd";
+  class?: string;
+}
+
+const {
+  value,
+  kind = "generic",
+  blocker,
+  lang,
+  as: Tag = "span",
+  class: className = "",
+} = Astro.props;
+
+const { text, isFallback } = resolveGated(value, kind, lang);
+
+if (isFallback) warnGated(Astro.url.pathname, blocker, kind);
+---
+
+<Tag
+  class:list={["gated", isFallback && "gated--pending", className]}
+  data-pending={isFallback ? "" : undefined}
+>
+  {text}
+</Tag>
+
+<style>
+  .gated {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* A pending value reads as calm and deliberate, not as a broken template. */
+  .gated--pending {
+    font-size: 0.9em;
+    font-style: normal;
+    color: var(--color-ink-muted);
+    letter-spacing: 0.01em;
+  }
+
+  :global([data-surface="dark"]) .gated--pending {
+    color: var(--color-paper-muted);
+  }
+</style>

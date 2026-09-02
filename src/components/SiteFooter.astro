@@ -1,0 +1,205 @@
+---
+/**
+ * Footer — BelArosa language: flat deep slate, serif lockup, hairline rules,
+ * tracked uppercase heads. No shadows.
+ *
+ * Hard rule 5 — no payment details. The Maybank number is not in config.ts and
+ * is not here.
+ * Hard rule 8 — no invented data. There is NO email line. v1 published
+ * `info@sempornaparadise.com`, which no source ever confirmed.
+ * Hard rule 4 — the licence is a label. No "berlesen penuh", no validity date.
+ * All four WhatsApp numbers appear (v1 shipped two).
+ */
+import { href, title, type Lang } from "../lib/routes";
+import { COMPANY, WHATSAPP, SOCIAL, HOURS } from "../data/config";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const t = {
+  bm: {
+    contact: "Hubungi kami",
+    explore: "Terokai",
+    legal: "Maklumat",
+    hours: "Waktu operasi",
+    follow: "Ikuti kami",
+    noEmail: "Semua pertanyaan melalui WhatsApp.",
+    rights: "Hak cipta terpelihara.",
+  },
+  en: {
+    contact: "Contact us",
+    explore: "Explore",
+    legal: "Information",
+    hours: "Operating hours",
+    follow: "Follow us",
+    noEmail: "All enquiries go through WhatsApp.",
+    rights: "All rights reserved.",
+  },
+}[lang];
+
+const exploreIds = ["packages", "resorts", "dayTrips", "diving", "planner"] as const;
+const legalIds = ["trust", "about", "faq", "privacy", "terms"] as const;
+const year = new Date().getFullYear();
+---
+
+<footer class="ftr" data-surface="dark">
+  <div class="wrap ftr__grid">
+    <div class="ftr__brand">
+      <p class="ftr__name">
+        <img class="ftr__mark" src="/brand/fish-mark.png" alt="" width="34" height="34" loading="lazy" decoding="async" />
+        {COMPANY.legalName}
+      </p>
+      <p class="ftr__licence">{COMPANY.licenceLabel}</p>
+      <p class="ftr__addr">{COMPANY.address}</p>
+      <p class="ftr__hours"><span>{t.hours}</span> {HOURS[lang]}</p>
+    </div>
+
+    <nav class="ftr__col" aria-labelledby="ftr-explore">
+      <h2 class="ftr__head" id="ftr-explore">{t.explore}</h2>
+      <ul>
+        {exploreIds.map((id) => (
+          <li><a href={href(id, lang)}>{title(id, lang)}</a></li>
+        ))}
+      </ul>
+    </nav>
+
+    <nav class="ftr__col" aria-labelledby="ftr-legal">
+      <h2 class="ftr__head" id="ftr-legal">{t.legal}</h2>
+      <ul>
+        {legalIds.map((id) => (
+          <li><a href={href(id, lang)}>{title(id, lang)}</a></li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="ftr__col">
+      <h2 class="ftr__head">{t.contact}</h2>
+      <ul>
+        {WHATSAPP.map((w) => (
+          <li>
+            <a href={`https://wa.me/${w.e164}`} target="_blank" rel="noopener noreferrer">
+              {w.display}
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="ftr__note">{t.noEmail}</p>
+
+      <h2 class="ftr__head ftr__head--gap">{t.follow}</h2>
+      <ul>
+        <li><a href={SOCIAL.facebook} target="_blank" rel="noopener noreferrer">Facebook</a></li>
+        <li><a href={SOCIAL.instagram} target="_blank" rel="noopener noreferrer">Instagram</a></li>
+        <li><a href={SOCIAL.tiktok} target="_blank" rel="noopener noreferrer">TikTok</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="wrap ftr__base">
+    <p>&copy; {year} {COMPANY.legalName}. {t.rights}</p>
+    <p class="ftr__tagline">{COMPANY.tagline}</p>
+  </div>
+</footer>
+
+<style>
+  .ftr {
+    background: var(--color-deep);
+    color: var(--color-paper);
+    padding-block: clamp(3.5rem, 8vw, 5.5rem) 2rem;
+  }
+
+  .ftr__grid {
+    display: grid;
+    gap: 3rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px)  { .ftr__grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .ftr__grid { grid-template-columns: 1.6fr 1fr 1fr 1.2fr; } }
+
+  .ftr__name {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    font-family: var(--font-display);
+    font-size: 1.625rem;
+    font-weight: 500;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+  }
+  /* The fish mark — echoes the header lockup. Decorative. */
+  .ftr__mark {
+    flex: none;
+    width: 34px;
+    height: auto;
+    align-self: center;
+  }
+  .ftr__licence {
+    font-size: var(--text-caption);
+    letter-spacing: 0.17em;
+    color: var(--color-paper-muted);
+    margin-bottom: 1.5rem;
+  }
+  .ftr__addr,
+  .ftr__hours {
+    font-size: var(--text-body-sm);
+    line-height: 1.7;
+    color: var(--color-paper-muted);
+    max-width: 34ch;
+  }
+  .ftr__hours { margin-top: 0.75rem; }
+  .ftr__hours span {
+    display: block;
+    color: var(--color-paper);
+    font-weight: 500;
+  }
+
+  .ftr__head {
+    font-family: var(--font-body);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.17em;
+    color: var(--color-paper);
+    margin: 0 0 0.75rem;
+  }
+  .ftr__head--gap { margin-top: 2.25rem; }
+
+  .ftr__col ul { list-style: none; margin: 0; padding: 0; }
+
+  .ftr__col a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;              /* v1 shipped 18px targets — defect #12 */
+    font-size: var(--text-body-sm);
+    color: var(--color-paper-muted);  /* verified on deep */
+    text-decoration: none;
+    transition: color var(--dur-micro) var(--ease-micro);
+  }
+  .ftr__col a:hover {
+    color: var(--color-gold-soft);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .ftr__note {
+    font-size: var(--text-caption);
+    color: var(--color-paper-muted);
+    margin-top: 0.5rem;
+    max-width: 28ch;
+  }
+
+  .ftr__base {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-rule-dark);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    font-size: var(--text-caption);
+    color: var(--color-paper-muted);
+  }
+  .ftr__tagline {
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+</style>

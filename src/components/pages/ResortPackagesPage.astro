@@ -1,0 +1,121 @@
+---
+/**
+ * P003 — Pakej Resort / Resort Packages.
+ *
+ * The resort comparison, framed by the one decision a visitor actually makes
+ * here: how many nights. Shares the PriceComparison table with P002 so a price
+ * is defined in exactly one place.
+ */
+import Base from "../../layouts/Base.astro";
+import PriceComparison from "../PriceComparison.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import Notice from "../Notice.astro";
+import { DURATION_LABELS, CHILD_DISCOUNT_RM, DEPOSIT_RM } from "../../data/resorts";
+import { href } from "../../lib/routes";
+import { formatRM } from "../../lib/gated";
+import type { Lang } from "../../lib/gated";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+
+const c = {
+  bm: {
+    title: "Pakej Resort",
+    desc: "Bandingkan pakej resort Semporna 2H1M, 3H2M dan 4H3M mengikut harga setiap orang dan perkara termasuk. Teruskan di WhatsApp untuk mengesahkan tempahan.",
+    eyebrow: "Pakej resort",
+    h1: "Pilih tempoh, kemudian resort",
+    lead: "Setiap resort ditawarkan dalam tiga tempoh. Harga di bawah setiap orang untuk dewasa 7 tahun ke atas.",
+    durHead: "Tiga tempoh",
+    durations: {
+      "2D1N": "Satu malam. Baik untuk singgah pendek atau sambungan dari lawatan harian.",
+      "3D2N": "Dua malam. Ruang untuk snorkeling dan satu hari pulau tanpa tergesa.",
+      "4D3N": "Tiga malam. Untuk penyelam dan tetamu yang mahu masa lebih di air.",
+    },
+    tableHead: "Perbandingan harga resort",
+    condTitle: "Nota harga",
+    cond: `Harga adalah harga rujukan dan disahkan semasa pertanyaan. Ketersediaan atas permintaan. Deposit ${formatRM(DEPOSIT_RM)} seorang. Kanak-kanak 1 hingga 6 tahun: potongan ${formatRM(CHILD_DISCOUNT_RM)}.`,
+    allLink: "Semua pakej & produk lain",
+    ctaLabel: "Tanya pakej resort",
+  },
+  en: {
+    title: "Resort Packages",
+    desc: "Compare Semporna resort packages at 2D1N, 3D2N and 4D3N by per-person price and inclusions. Continue on WhatsApp to confirm a booking.",
+    eyebrow: "Resort packages",
+    h1: "Pick the length, then the resort",
+    lead: "Every resort is offered in three lengths. Prices below are per person for adults 7 and above.",
+    durHead: "Three lengths",
+    durations: {
+      "2D1N": "One night. Good for a short stop or a follow-on from a day trip.",
+      "3D2N": "Two nights. Room for snorkelling and one unhurried island day.",
+      "4D3N": "Three nights. For divers and guests who want more time in the water.",
+    },
+    tableHead: "Resort price comparison",
+    condTitle: "Price note",
+    cond: `Prices are reference prices and are confirmed at enquiry. Availability is on request. Deposit is ${formatRM(DEPOSIT_RM)} per person. Children aged 1 to 6: ${formatRM(CHILD_DISCOUNT_RM)} off.`,
+    allLink: "All packages & other products",
+    ctaLabel: "Ask about resort packages",
+  },
+}[lang];
+
+const durKeys = ["2D1N", "3D2N", "4D3N"] as const;
+---
+
+<Base route="resortPackages" lang={lang} title={c.title} description={c.desc}>
+  <section class="section--tall" data-surface="sand" data-reveal>
+    <div class="wrap">
+      <p class="eyebrow">{c.eyebrow}</p>
+      <h1 class="sec__title">{c.h1}</h1>
+      <p class="sec__lead">{c.lead}</p>
+    </div>
+  </section>
+
+  <section class="section" data-surface="light" data-reveal>
+    <div class="wrap">
+      <h2 class="sec__title">{c.durHead}</h2>
+      <dl class="durs">
+        {durKeys.map((d) => (
+          <div>
+            <dt>{DURATION_LABELS[d][lang]}</dt>
+            <dd>{c.durations[d]}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <section class="section--tall" data-surface="sand" data-reveal>
+    <div class="wrap">
+      <p class="eyebrow">{c.tableHead}</p>
+      <h2 class="sec__title">{c.tableHead}</h2>
+      <PriceComparison lang={lang} />
+    </div>
+  </section>
+
+  <section class="section" data-surface="light" data-reveal>
+    <div class="wrap">
+      <Notice title={c.condTitle}><p>{c.cond}</p></Notice>
+      <div class="band-cta band-cta--start">
+        <WhatsAppCTA lang={lang} label={c.ctaLabel} product="Pakej resort" />
+        <a class="pill" href={href("packages", lang)}>{c.allLink}</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .durs { margin: 2rem 0 0; display: grid; gap: 0; }
+  .durs div {
+    display: grid;
+    grid-template-columns: minmax(0, 8rem) 1fr;
+    gap: 1.5rem;
+    padding: 1.25rem 0;
+    border-top: 1px solid var(--color-rule-light);
+  }
+  .durs div:last-child { border-bottom: 1px solid var(--color-rule-light); }
+  .durs dt {
+    font-family: var(--font-display);
+    font-size: var(--text-subheading);
+  }
+  .durs dd { margin: 0; font-size: var(--text-body-sm); line-height: 1.65; color: var(--color-ink-muted); max-width: 48ch; }
+  @media (max-width: 559px) { .durs div { grid-template-columns: 1fr; gap: 0.4rem; } }
+</style>

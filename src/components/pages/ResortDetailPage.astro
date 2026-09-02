@@ -1,0 +1,244 @@
+---
+/**
+ * P018 — one resort. `/resort/[slug]/` and `/en/resorts/[slug]/`.
+ *
+ * Hard rules that shape this page:
+ *  - Rule 8  no invented data. Facilities and capacity are NOT confirmed for
+ *            most resorts (B04), so they render through <Gated> facility
+ *            fallbacks, never guessed.
+ *  - DESIGN.md §7  no generated building captioned as this resort. The plate is
+ *            generic water / interior mood, captioned as such.
+ *  - Rule 12  the Adil "free transparent boat / guide / snorkelling" claim is
+ *            superseded and never printed. `notes: "adil-caution"` triggers a
+ *            plain line instead.
+ *  - Pakej Bandar carries its mandatory line and never names the hotel.
+ */
+import Base from "../../layouts/Base.astro";
+import Gated from "../Gated.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import Notice from "../Notice.astro";
+import Img from "../Img.astro";
+import {
+  DURATIONS,
+  DURATION_LABELS,
+  INCLUSION_LABELS,
+  CHILD_DISCOUNT_RM,
+  DEPOSIT_RM,
+  productCode,
+  type Resort,
+} from "../../data/resorts";
+import { resortDetailPath, href } from "../../lib/routes";
+import { formatRM } from "../../lib/gated";
+import type { Lang } from "../../lib/gated";
+
+interface Props { lang: Lang; resort: Resort }
+const { lang, resort } = Astro.props;
+
+const isAdil = resort.notes === "adil-caution";
+const isTown = resort.notes === "town-availability";
+
+const c = {
+  bm: {
+    eyebrow: "Resort",
+    descLead: `Harga penuh, perkara termasuk dan cara menempah ${resort.name} (${resort.room}) di Semporna melalui Semporna Paradise.`,
+    lead: "Harga di bawah adalah setiap orang untuk dewasa 7 tahun ke atas. Fakta yang belum disahkan ditandakan dengan jelas dan bukan diagak.",
+    priceHead: "Harga setiap tempoh",
+    perPerson: "seorang",
+    inclHead: "Termasuk dalam pakej ini",
+    facilHead: "Kemudahan & kapasiti bilik",
+    facilFallbackNote: "Kemudahan dan kapasiti bilik untuk resort ini belum disahkan sepenuhnya. Minta butiran terkini melalui WhatsApp sebelum menempah.",
+    condTitle: "Sebelum menempah",
+    cond1: "Harga adalah harga rujukan dan disahkan semasa pertanyaan.",
+    cond2: `Ketersediaan atas permintaan. Deposit ${formatRM(DEPOSIT_RM)} seorang. Kanak-kanak 1 hingga 6 tahun: potongan ${formatRM(CHILD_DISCOUNT_RM)}.`,
+    adilTitle: "Nota Adil Waterhouse",
+    adil: "Bahan lama pernah menyebut bot lutsinar percuma, pemandu dan kawasan snorkeling. Perkara itu tidak disahkan untuk harga semasa dan tidak disenaraikan di sini. Sahkan apa yang termasuk melalui WhatsApp.",
+    townTitle: "Pakej Bandar",
+    town: "Penginapan hotel di pekan Semporna, tertakluk kepada ketersediaan.",
+    ctaLabel: "Tanya tentang resort ini",
+    back: "Semua resort",
+    imgAltInterior: "Ruang dalam pondok kayu atas air dengan tingkap terbuka menghadap laut pirus.",
+    imgAltWater: "Air pirus cetek di atas pasir putih berhampiran jeti kayu.",
+    imgCaption: "Imej dijana. Suasana penginapan atas air di kawasan Semporna, bukan foto resort ini.",
+  },
+  en: {
+    eyebrow: "Resort",
+    descLead: `Full price, inclusions and how to book ${resort.name} (${resort.room}) in Semporna through Semporna Paradise.`,
+    lead: "Prices below are per person for adults 7 and above. Facts that are not yet confirmed are marked clearly and never guessed.",
+    priceHead: "Price by length of stay",
+    perPerson: "per person",
+    inclHead: "Included in this package",
+    facilHead: "Room facilities & capacity",
+    facilFallbackNote: "Room facilities and capacity for this resort are not fully confirmed. Ask for the current detail on WhatsApp before booking.",
+    condTitle: "Before you book",
+    cond1: "Prices are reference prices and are confirmed at enquiry.",
+    cond2: `Availability is on request. Deposit is ${formatRM(DEPOSIT_RM)} per person. Children aged 1 to 6: ${formatRM(CHILD_DISCOUNT_RM)} off.`,
+    adilTitle: "Adil Waterhouse note",
+    adil: "Older material mentioned a free transparent boat, a guide and a snorkelling area. Those are not confirmed for the current price and are not listed here. Confirm what is included on WhatsApp.",
+    townTitle: "Town Package",
+    town: "Hotel accommodation in Semporna town, subject to availability.",
+    ctaLabel: "Ask about this resort",
+    back: "All resorts",
+    imgAltInterior: "The interior of a timber overwater cabin with open shutters facing turquoise sea.",
+    imgAltWater: "Shallow turquoise water over white sand beside a wooden jetty.",
+    imgCaption: "Generated image. The feel of overwater stays in the Semporna area, not a photo of this resort.",
+  },
+}[lang];
+
+const bmPath = resortDetailPath(resort.slug, "bm");
+const enPath = resortDetailPath(resort.slug, "en");
+const selfPath = lang === "bm" ? bmPath : enPath;
+const twinPath = lang === "bm" ? enPath : bmPath;
+
+const inclusions = resort.inclusions.map((id) => INCLUSION_LABELS[id][lang]);
+const useInterior = isTown ? false : true;
+
+// The message carries a real SPTT- code: the first duration this resort has.
+const firstDur = DURATIONS.find((d) => resort.prices[d] !== null) ?? "2D1N";
+const enquiryCode = productCode(resort, firstDur);
+---
+
+<Base
+  path={selfPath}
+  twinPath={twinPath}
+  lang={lang}
+  depth="reef"
+  title={`${resort.name} — ${resort.room}`}
+  description={c.descLead}
+>
+  <section class="section--tall" data-surface="sand" data-reveal>
+    <div class="wrap detail">
+      <div class="detail__text">
+        <p class="eyebrow">{c.eyebrow}</p>
+        <h1 class="detail__title">{resort.name}</h1>
+        <p class="detail__room">{resort.room}</p>
+        <p class="sec__lead">{c.lead}</p>
+        <div class="band-cta band-cta--start">
+          <WhatsAppCTA
+            lang={lang}
+            code={enquiryCode}
+            product={`${resort.name} — ${resort.room}`}
+            label={c.ctaLabel}
+          />
+          <a class="pill" href={href("resorts", lang)}>{c.back}</a>
+        </div>
+      </div>
+      <figure class="detail__media">
+        <Img
+          slot={useInterior ? "resort-generic-1" : "resort-generic-2"}
+          alt={useInterior ? c.imgAltInterior : c.imgAltWater}
+          hero
+          sizes="(min-width: 900px) 42vw, 100vw"
+        />
+        <figcaption>{c.imgCaption}</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" data-surface="light" data-reveal>
+    <div class="wrap">
+      <h2 class="sec__title">{c.priceHead}</h2>
+      <dl class="dprice">
+        {DURATIONS.map((d) => (
+          <div>
+            <dt>{DURATION_LABELS[d][lang]}</dt>
+            <dd>
+              <Gated value={resort.prices[d]} kind="price" blocker={resort.blockers?.[0]} lang={lang} />
+              {resort.prices[d] !== null && <span> / {c.perPerson}</span>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      {isTown && (
+        <Notice title={c.townTitle} tone="neutral"><p>{c.town}</p></Notice>
+      )}
+      {isAdil && (
+        <Notice title={c.adilTitle}><p>{c.adil}</p></Notice>
+      )}
+    </div>
+  </section>
+
+  <section class="section" data-surface="sand" data-reveal>
+    <div class="wrap">
+      <div class="pair">
+        <div class="pair__col">
+          <h3>{c.inclHead}</h3>
+          <ul>{inclusions.map((i) => <li>{i}</li>)}</ul>
+        </div>
+        <div class="pair__col">
+          <h3>{c.facilHead}</h3>
+          <ul>
+            <li>
+              <Gated value={null} kind="facility" blocker="B04" lang={lang} />
+            </li>
+          </ul>
+        </div>
+      </div>
+      <Notice tone="neutral"><p>{c.facilFallbackNote}</p></Notice>
+    </div>
+  </section>
+
+  <section class="section" data-surface="light" data-reveal>
+    <div class="wrap">
+      <Notice title={c.condTitle}>
+        <p>{c.cond1}</p>
+        <p>{c.cond2}</p>
+      </Notice>
+      <div class="band-cta band-cta--start">
+        <WhatsAppCTA
+          lang={lang}
+          code={enquiryCode}
+          product={`${resort.name} — ${resort.room}`}
+          label={c.ctaLabel}
+        />
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .detail { display: grid; gap: 3rem; }
+  @media (min-width: 900px) {
+    .detail { grid-template-columns: minmax(0, 1fr) minmax(0, 0.75fr); align-items: center; gap: 4rem; }
+  }
+  .detail__title { font-size: clamp(2.5rem, 5vw, 3.5rem); line-height: 1.08; }
+  .detail__room {
+    margin-top: 0.5rem;
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+  }
+  .detail__media { margin: 0; }
+  .detail__media :global(.img img) { border-radius: var(--radius-card); }
+  .detail__media figcaption {
+    margin-top: 0.75rem;
+    font-size: var(--text-caption);
+    color: var(--color-ink-muted);
+  }
+
+  .dprice { margin: 2rem 0 0; display: grid; gap: 0; }
+  .dprice div {
+    display: grid;
+    grid-template-columns: minmax(0, 10rem) 1fr;
+    gap: 1.5rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--color-rule-light);
+    align-items: baseline;
+  }
+  .dprice div:last-child { border-bottom: 1px solid var(--color-rule-light); }
+  .dprice dt {
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+  }
+  .dprice dd {
+    margin: 0;
+    font-size: var(--text-subheading);
+    font-variant-numeric: tabular-nums;
+  }
+  .dprice dd span { font-size: var(--text-body-sm); color: var(--color-ink-muted); }
+</style>
