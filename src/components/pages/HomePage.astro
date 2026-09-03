@@ -2,853 +2,698 @@
 /**
  * P001 — Laman Utama / Home. One component, both languages (parity, defect #11).
  *
- * REDESIGN-BRIEF §6.1: lead with the PRODUCT, not a quiz. §6.6: the <h1> names
- * the place in the page language; the registered English tagline stays a
- * supporting line, never the heading.
+ * ── Rebuilt in the BelArosa Chalet language, 2026-09-04 ──────────────────
+ * Reference capture: ~/website-clones/belarosa-chalet/ (screenshots at 1920 /
+ * 1440 / 768 / 390, design tokens read out of the rendered DOM, not guessed).
+ * Section order mirrors the reference: hero, vision, a teaser gallery of the
+ * things you can book, an editorial run of topline + heading + bleeding image,
+ * a drag gallery, the fullscreen teaser, the master-nav strip, footer.
  *
- * ── De-slop pass 2026-09-02 ──────────────────────────────────────────────
- * The hero used to stack six decorative loops at once: rising bubbles, swaying
- * sun rays, a spinning badge, a drifting waterline, a word-by-word title
- * entrance and a bobbing scroll arrow. Together they read as a generated
- * landing page, so all six were removed at the owner's request.
+ * What carried over: three scroll themes swapping at mid-viewport, 0px radius
+ * everywhere, 240px section rhythm, images bleeding past the container to the
+ * viewport edge, transparent hairline-underline buttons, no shadows anywhere,
+ * word-by-word heading reveals.
  *
- * What is left is the hero doing its job: a generated underwater plate, a
- * headline that names the product and the place, one lead paragraph, and one
- * WhatsApp button. The plate is the only motion on the page above the fold.
+ * What did NOT: the reference's muted grey (#8c9ba0, 3.19:1 on white — a
+ * contrast failure is not a design decision), and its filled-button ban for
+ * the one WhatsApp CTA, which is this site's only conversion action.
  *
- * The hero plate is a GENERATED video (KIE / veo3_fast, 2026-09-02),
- * motion-interpolated 24 → 60 fps locally. It contains no real named property
- * and no people, so it clears CONTEXT.md hard rule 3 — and it is still
- * captioned as generated, per DESIGN.md §7, because at full bleed it would
- * otherwise read as documentary footage.
+ * ── Media ────────────────────────────────────────────────────────────────
+ * The hero is the owner's own footage. The tiles are the company's own reels
+ * from @sem4naparadise. The stills are either the seven cleared guest
+ * photographs or free-licence Wikimedia Commons files, each attributed in the
+ * footer. Owner override of 2026-09-03, CONTEXT.md §5. Provenance for every
+ * file: img-raw/SOURCES.md.
  *
- * Accessibility contract for the hero:
- *  - The video is decorative: aria-hidden, tabindex -1, muted, no audio track.
- *  - Sources are attached by JS, never in markup, so `prefers-reduced-motion`
- *    and Save-Data users never download or start it — the poster is the page.
- *  - WCAG 2.2.2: a real pause/play control sits in the hero, keyboard reachable.
+ * Other operators' marketing photography is NOT published anywhere on this
+ * page. The owner cannot license what he does not own, so a resort card shows
+ * the company's own reel of that resort, or a free-licence still, or nothing.
  *
- * BelArosa editorial-luxury language is unchanged below the fold: flat
- * shadowless surfaces, depth from colour and 1px hairlines, a hairline
- * menu-style price list instead of a card grid, 50/50 splits with
- * edge-bleeding generated imagery, outlined pills, honey gold decorative only.
+ * ── Hard rules that still bind every line below ──────────────────────────
+ * No hardcoded price (everything routes through <Gated>), no availability
+ * claim, no safety guarantee, no licence-validity wording, no invented email,
+ * no raw blocker token. CONTEXT.md §3.
  */
 import Base from "../../layouts/Base.astro";
 import Gated from "../Gated.astro";
-import WhatsAppCTA from "../WhatsAppCTA.astro";
 import Img from "../Img.astro";
+import WhatsAppCTA from "../WhatsAppCTA.astro";
+import HeroVideo from "../HeroVideo.astro";
+import VideoTile from "../VideoTile.astro";
+import DragGallery from "../DragGallery.astro";
+import FullscreenTeaser from "../FullscreenTeaser.astro";
 import GuestGallery from "../GuestGallery.astro";
+import PriceComparison from "../PriceComparison.astro";
+import Reveal from "../Reveal.astro";
 import { gallery } from "../../data/photos";
 import { RESORTS, fromPrice } from "../../data/resorts";
 import { DAY_TRIPS } from "../../data/products";
-import { href, resortDetailPath } from "../../lib/routes";
+import { TILES, PORTRAIT_TILES } from "../../data/tiles";
+import { creditAlt } from "../../data/photo-credits";
+import { href, resortDetailPath, ROUTES, type RouteId } from "../../lib/routes";
 import { COMPANY } from "../../data/config";
 import type { Lang } from "../../lib/gated";
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 
-const featured = [...RESORTS]
-  .filter((r) => fromPrice(r) !== null)
-  .sort((a, b) => (fromPrice(a) ?? 0) - (fromPrice(b) ?? 0))
-  .slice(0, 6);
+/* -------------------------------------------------------------------------- */
+/* Resort cards. A resort shows the company's own reel of it where one exists  */
+/* and a free-licence still otherwise. Never another operator's photography.   */
+/* -------------------------------------------------------------------------- */
+
+const REEL_BY_SLUG: Record<string, string> = {
+  "adil-waterhouse":   "reel-Da38CbYzyF4",
+  "royal":             "reel-DYnrsm5DMF8",
+  "dayang":            "reel-DYvfflFlOUm",
+  "sisipan":           "reel-DY8SKpQjZhK",
+  "singamata-basic":   "reel-DYvaKb",
+  "singamata-deluxe":  "reel-DYvaKb",
+  "maglami-lami":      "reel-DYnruNyDtRQ",
+  "paghalian":         "reel-DYN6RsbEpQp",
+  "bihing-angan":      "reel-DY3Olyzisf7",
+  "nusakuya":          "reel-DY5tWTZjUya",
+};
+
+/** Free-licence stand-ins, cycled so no two neighbours repeat. */
+const FALLBACK_STILLS = ["cm-stilt-lagoon", "cm-stilt-village", "cm-reef-mosaic", "cm-white-beach"] as const;
+
+const resortCards = RESORTS.map((r, i) => ({
+  resort: r,
+  tile: TILES.find((t) => t.id === REEL_BY_SLUG[r.slug]) ?? null,
+  still: FALLBACK_STILLS[i % FALLBACK_STILLS.length],
+  from: fromPrice(r),
+}));
+
+/**
+ * Reel tiles for the diving grid and the gallery strip.
+ *
+ * The diving grid is picked by SUBJECT, not by position: the first four
+ * portrait tiles happened to be a resort dock and two near-identical boat
+ * clips, which is not what a section headed "down to the wall" should show.
+ * The gallery strip then takes everything the diving grid did not.
+ */
+const DIVE_SUBJECTS = ["seawalk", "snorkel", "hopping"];
+const diveTiles = PORTRAIT_TILES
+  .filter((t) => DIVE_SUBJECTS.includes(t.subject))
+  .slice(0, 4);
+const diveIds = new Set(diveTiles.map((t) => t.id));
+const galleryTiles = PORTRAIT_TILES.filter((t) => !diveIds.has(t.id)).slice(0, 12);
+
+/** The master-nav strip at the foot of the page, like the reference's. */
+const MASTER: RouteId[] = [
+  "packages", "resorts", "dayTrips", "diving", "sipadan",
+  "planner", "trust", "about", "contact", "faq",
+];
 
 const c = {
   bm: {
     title: "Pakej Pulau Semporna, Sabah",
     desc: "Pakej resort, lawatan harian pulau dan selam di Semporna, Sabah. Harga penuh disenaraikan. Hubungi kami di WhatsApp untuk pengesahan tempahan.",
+
     heroEyebrow: `Semporna · Sabah · ${COMPANY.licenceLabel}`,
-    h1: "Pakej pulau dan selam di Semporna",
-    heroLead:
-      "Penginapan resort atas air, lawatan harian ke Tun Sakaran dan Mabul, dan kursus selam PADI — semuanya bermula dari jeti Semporna. Harga penuh ada di laman ini. Tiada tempahan dalam talian: setiap pertanyaan pergi terus kepada kami di WhatsApp.",
-    heroCta: "Mula pertanyaan",
-    heroQuiet: "Lihat semua pakej & harga",
-    heroCredit: "Visual dijana. Bukan rakaman lokasi.",
-    playLabel: "Main semula latar",
-    pauseLabel: "Hentikan gerakan latar",
-    b0eyebrow: "Kawasan",
-    b0title: "Semporna duduk di hujung timur Sabah",
-    b0lead:
-      "Dari jeti bandar, bot keluar ke gugusan pulau di Laut Sulawesi — pulau batu kapur berhutan, lagun cetek, dan tebing karang yang terus jatuh ke air biru. Setiap pakej di laman ini bertolak dari jeti yang sama.",
-    places: [
-      {
-        n: "Tun Sakaran",
-        d: "Bohey Dulang, Mantabuan, Sibuan. Taman marin dengan pulau berbukit dan lagun cetek.",
-      },
-      {
-        n: "Kawasan Mabul",
-        d: "Mabul dan Kapalai. Rumah atas air dan tapak selam cetek.",
-      },
-      {
-        n: "Sipadan",
-        d: "Pulau lautan dengan tebing dalam. Kawasan dilindungi — permit ditetapkan oleh pihak berkuasa taman.",
-      },
-      {
-        n: "Mataking & Timbun Mata",
-        d: "Laluan lawatan harian yang lebih jauh dari bandar.",
-      },
-    ],
-    b0imgAlt:
-      "Pandangan dari udara: sebatang pokok kelapa di atas beting pasir putih yang sempit, dikelilingi air cetek pirus.",
-    lifeHead: "Hidupan laut",
-    life: [
-      { slot: "creature-turtle", n: "Penyu", alt: "Seekor penyu hijau berenang perlahan di atas dasar berpasir cerah." },
-      { slot: "creature-barracuda", n: "Barakuda", alt: "Sekumpulan barakuda berpusing dalam bentuk lingkaran di air biru." },
-      { slot: "creature-reef", n: "Karang", alt: "Ikan karang jingga di atas karang lembut merah jambu dan jingga yang padat." },
-    ],
-    genNote: "Ilustrasi dijana. Bukan foto lokasi.",
-    b1eyebrow: "Pakej resort",
-    b1title: "Enam pakej resort",
-    b1lead:
-      "Harga setiap orang. Semua pakej termasuk penginapan, makan, dan pengangkutan lapangan terbang serta bot. Disusun dari harga terendah. Ketersediaan atas permintaan.",
-    b1colName: "Resort & bilik",
-    b1cta: "Tanya pakej resort",
-    b1ctaProduct: "Pakej resort",
-    b1more: `Bandingkan semua ${RESORTS.length} resort →`,
-    b2eyebrow: "Lawatan harian",
-    b2title: "Empat laluan lawatan harian",
-    b2lead:
-      "Bot, makan tengah hari, pemandu, bayaran jeti dan set snorkeling termasuk pada setiap laluan. Jaket keselamatan disewa berasingan.",
-    b2link: "Semua lawatan harian",
-    b2imgAlt:
-      "Sebuah bot kayu di atas air pirus yang tenang di antara dua pulau batu kapur berhutan.",
+    h1: "Kami bawa anda ke pulau",
+    heroLead: "Resort atas air, lawatan harian dan selam di Laut Sulawesi.",
+    scroll: "Tatal",
+    playLabel: "Main semula video latar",
+    pauseLabel: "Hentikan video latar",
+
+    visionEyebrow: "Falsafah",
+    visionTitle: "Perjalanan bermula di jeti yang sama, tetapi tiada dua perjalanan yang serupa.",
+    visionLead:
+      "Kami operator marin berlesen di Semporna, Sabah. Kami susun penginapan resort atas air, lawatan harian ke Tun Sakaran dan Mabul, serta kursus selam PADI — semuanya bertolak dari jeti bandar Semporna. Harga penuh ada di laman ini. Tiada tempahan dalam talian: setiap pertanyaan pergi terus kepada kami di WhatsApp.",
+    visionCta: "Tentang kami",
+    visionImgCap: "Perkampungan atas air di Taman Marin Tun Sakaran.",
+
+    resortsEyebrow: "Resort",
+    resortsTitle: "Resort",
+    resortsSub: `${RESORTS.length} pilihan penginapan. Dari rumah atas air ke pakej bandar.`,
+    resortsMore: "Bandingkan semua resort",
+    from: "Dari",
     perPerson: "seorang",
-    b3eyebrow: "Selam & PADI",
-    b3title: "Selam dan sijil PADI",
-    b3lead:
-      "Selam skuba, pakej Sipadan, dan sijil PADI Open Water serta Advanced Open Water. Tempoh kursus adalah anggaran perancangan, bukan jaminan.",
-    b3cta: "Tanya tentang Sipadan",
-    b3link: "Semua pakej selam",
-    b3imgAlt:
-      "Bayang penyelam skuba jauh di atas kamera, disinari cahaya matahari yang menembusi air biru.",
-    b4eyebrow: "Rancang perjalanan",
-    b4title: "Pilih pakej dalam tiga soalan",
-    b4lead:
+
+    pkgEyebrow: "Pakej & harga",
+    pkgTitle: "Bandingkan setiap resort, sebelah menyebelah.",
+    pkgLead:
+      "Harga setiap orang, mengikut tempoh menginap. Semua pakej termasuk penginapan, makan, dan pengangkutan lapangan terbang serta bot. Ketersediaan atas permintaan.",
+
+    diveEyebrow: "Selam & Sipadan",
+    diveTitle: "Turun ke tebing.",
+    diveLead:
+      "Selam skuba, pakej Sipadan, dan sijil PADI Open Water serta Advanced Open Water. Sipadan ialah kawasan dilindungi — permit ditetapkan oleh pihak berkuasa taman. Tempoh kursus adalah anggaran perancangan, bukan jaminan.",
+    diveCta: "Tanya tentang Sipadan",
+    diveLink: "Semua pakej selam",
+
+    tripEyebrow: "Lawatan harian",
+    tripTitle: "Empat laluan, satu hari, keluar dari jeti Semporna.",
+    tripLead:
+      "Bot, makan tengah hari, pemandu, bayaran jeti dan set snorkeling termasuk pada setiap laluan. Sewa jaket keselamatan berasingan.",
+    tripLink: "Semua lawatan harian",
+    tripPhotoEyebrow: "Foto perjalanan",
+    tripPhotoTitle: "Rakaman sebenar dari perjalanan kami",
+    tripPhotoLead:
+      "Gambar ini dirakam semasa perjalanan kami di Semporna dan dikongsi dengan izin tetamu di dalamnya.",
+
+    galEyebrow: "Galeri",
+    galTitle: "Rakaman dari laut kami sendiri.",
+    galLead: "Klip pendek dari perjalanan kami, tanpa bunyi. Seret untuk melihat.",
+
+    teaserEyebrow: "Semporna",
+    teaserTitle: "Laut ini tidak sama pada mana-mana dua hari.",
+    teaserLead: "Beritahu kami bila anda mahu datang, dan kami susun perjalanannya.",
+    teaserMarquee: "Terokai Semporna",
+    teaserCta: "Rancang perjalanan",
+
+    planEyebrow: "Rancang perjalanan",
+    planTitle: "Pilih pakej dalam tiga soalan.",
+    planLead:
       "Jawab tiga soalan — kami tunjukkan senarai pendek dan sediakan mesej WhatsApp yang sudah lengkap dengan kod pakej anda.",
-    b4steps: [
+    planSteps: [
       "Siapa yang pergi — keluarga, kumpulan, atau penyelam sertifikasi?",
       "Berapa malam — 2H1M, 3H2M, atau 4H3M?",
       "Snorkeling sahaja, atau mahu turun ke tebing Sipadan?",
     ],
-    b4link: "Buka perancang perjalanan",
+    planLink: "Buka perancang perjalanan",
+
+    navEyebrow: "Semua halaman",
+    navTitle: "Ke mana seterusnya",
   },
+
   en: {
     title: "Semporna Island Packages, Sabah",
     desc: "Resort packages, island day trips and diving in Semporna, Sabah. Full prices listed. Contact us on WhatsApp to confirm a booking.",
+
     heroEyebrow: `Semporna · Sabah · ${COMPANY.licenceLabel}`,
-    h1: "Island packages and diving in Semporna",
-    heroLead:
-      "Overwater resort stays, day trips to Tun Sakaran and Mabul, and PADI dive courses — all of it leaves from the Semporna jetty. Full prices are on this site. There is no online checkout: every enquiry goes straight to us on WhatsApp.",
-    heroCta: "Start an enquiry",
-    heroQuiet: "See all packages & prices",
-    heroCredit: "Generated visual. Not location footage.",
-    playLabel: "Play background motion",
-    pauseLabel: "Pause background motion",
-    b0eyebrow: "The area",
-    b0title: "Semporna sits on the east edge of Sabah",
-    b0lead:
-      "From the town jetty, boats run out into the Celebes Sea islands — forested limestone peaks, shallow lagoons, and reef walls that fall straight away into blue water. Every package on this site leaves from that same jetty.",
-    places: [
-      {
-        n: "Tun Sakaran",
-        d: "Bohey Dulang, Mantabuan, Sibuan. A marine park of hill islands and shallow lagoons.",
-      },
-      {
-        n: "Mabul area",
-        d: "Mabul and Kapalai. Overwater houses and shallow dive sites.",
-      },
-      {
-        n: "Sipadan",
-        d: "An oceanic island with a deep wall. A protected site — permits are set by the park authority.",
-      },
-      {
-        n: "Mataking & Timbun Mata",
-        d: "The day-trip routes that run further out from town.",
-      },
-    ],
-    b0imgAlt:
-      "Seen from above: a single palm on a narrow white sand spit, ringed by shallow turquoise water.",
-    lifeHead: "Marine life",
-    life: [
-      { slot: "creature-turtle", n: "Turtle", alt: "A green sea turtle gliding slowly over a pale sand bottom." },
-      { slot: "creature-barracuda", n: "Barracuda", alt: "A school of barracuda turning in a slow spiral in blue water." },
-      { slot: "creature-reef", n: "Reef", alt: "Orange reef fish above dense pink and orange soft coral." },
-    ],
-    genNote: "Generated illustration. Not a location photograph.",
-    b1eyebrow: "Resort packages",
-    b1title: "Six resort packages",
-    b1lead:
-      "Prices are per person. Every package includes accommodation, meals, airport transport and boat transport. Sorted from the lowest price. Availability is on request.",
-    b1colName: "Resort & room",
-    b1cta: "Ask about resort packages",
-    b1ctaProduct: "Resort package",
-    b1more: `Compare all ${RESORTS.length} resorts →`,
-    b2eyebrow: "Day trips",
-    b2title: "Four day-trip routes",
-    b2lead:
-      "Boat, lunch, guide, jetty fee and a snorkelling set are included on every route. The life jacket is rented separately.",
-    b2link: "All day trips",
-    b2imgAlt:
-      "A wooden boat on calm turquoise water between two forested limestone islands.",
+    h1: "We bring you to the islands",
+    heroLead: "Overwater resorts, island day trips and diving in the Celebes Sea.",
+    scroll: "Scroll",
+    playLabel: "Play the background video",
+    pauseLabel: "Pause the background video",
+
+    visionEyebrow: "Philosophy",
+    visionTitle: "Every trip leaves from the same jetty, and no two of them are the same.",
+    visionLead:
+      "We are a licensed marine operator in Semporna, Sabah. We arrange overwater resort stays, day trips to Tun Sakaran and Mabul, and PADI dive courses — all of it leaving from the Semporna town jetty. Full prices are on this site. There is no online checkout: every enquiry goes straight to us on WhatsApp.",
+    visionCta: "About us",
+    visionImgCap: "A stilt village in the Tun Sakaran Marine Park.",
+
+    resortsEyebrow: "Resorts",
+    resortsTitle: "Resorts",
+    resortsSub: `${RESORTS.length} places to stay. From overwater houses to a town package.`,
+    resortsMore: "Compare every resort",
+    from: "From",
     perPerson: "per person",
-    b3eyebrow: "Diving & PADI",
-    b3title: "Diving and PADI certification",
-    b3lead:
-      "Scuba diving, Sipadan packages, and PADI Open Water and Advanced Open Water certification. Course length is a planning estimate, not a guarantee.",
-    b3cta: "Ask about Sipadan",
-    b3link: "All diving packages",
-    b3imgAlt:
-      "A scuba diver silhouetted far above the camera, backlit by sunlight through blue water.",
-    b4eyebrow: "Plan your trip",
-    b4title: "Pick a package in three questions",
-    b4lead:
+
+    pkgEyebrow: "Packages & prices",
+    pkgTitle: "Compare every resort, side by side.",
+    pkgLead:
+      "Prices are per person, by length of stay. Every package includes accommodation, meals, airport transport and boat transport. Availability is on request.",
+
+    diveEyebrow: "Diving & Sipadan",
+    diveTitle: "Down to the wall.",
+    diveLead:
+      "Scuba diving, Sipadan packages, and PADI Open Water and Advanced Open Water certification. Sipadan is a protected site — permits are set by the park authority. Course length is a planning estimate, not a guarantee.",
+    diveCta: "Ask about Sipadan",
+    diveLink: "All diving packages",
+
+    tripEyebrow: "Day trips",
+    tripTitle: "Four routes, one day, out from the Semporna jetty.",
+    tripLead:
+      "Boat, lunch, guide, jetty fee and a snorkelling set are included on every route. The life jacket is rented separately.",
+    tripLink: "All day trips",
+    tripPhotoEyebrow: "Trip photos",
+    tripPhotoTitle: "Real frames from our own trips",
+    tripPhotoLead:
+      "These were taken on our own Semporna trips and are shared with the permission of the guests in them.",
+
+    galEyebrow: "Gallery",
+    galTitle: "Footage from our own water.",
+    galLead: "Short clips from our trips, no sound. Drag to explore.",
+
+    teaserEyebrow: "Semporna",
+    teaserTitle: "This sea is never the same on any two days.",
+    teaserLead: "Tell us when you want to come, and we will shape the trip around it.",
+    teaserMarquee: "Explore Semporna",
+    teaserCta: "Plan your trip",
+
+    planEyebrow: "Plan your trip",
+    planTitle: "Pick a package in three questions.",
+    planLead:
       "Answer three questions — we show a short list and prepare a WhatsApp message already filled in with your package codes.",
-    b4steps: [
+    planSteps: [
       "Who is travelling — a family, a group, or certified divers?",
       "How many nights — 2D1N, 3D2N, or 4D3N?",
       "Snorkelling only, or down to the Sipadan wall?",
     ],
-    b4link: "Open the trip planner",
+    planLink: "Open the trip planner",
+
+    navEyebrow: "Every page",
+    navTitle: "Where to next",
   },
 }[lang];
-
-const durLabels =
-  lang === "bm"
-    ? { "2D1N": "2H1M", "3D2N": "3H2M", "4D3N": "4H3M" }
-    : { "2D1N": "2D1N", "3D2N": "3D2N", "4D3N": "4D3N" };
-const DURS = ["2D1N", "3D2N", "4D3N"] as const;
 ---
 
-<Base route="home" lang={lang} title={c.title} description={c.desc}>
-  <section class="hero" data-surface="dark">
-    {/* ---- The plate. Decorative: the page reads identically without it. ---- */}
-    <div class="hero__media" aria-hidden="true">
-      <video
-        class="hero__video"
-        id="hero-video"
-        poster="/video/hero-poster.jpg"
-        muted
-        loop
-        playsinline
-        preload="none"
-        tabindex="-1"
-        data-mp4="/video/hero-60fps.mp4"></video>
-      <div class="hero__scrim"></div>
-    </div>
+<Base
+  route="home"
+  lang={lang}
+  title={c.title}
+  description={c.desc}
+  theme="2"
+  heroVideo
+>
+  {/* ---- 01 · Hero ---------------------------------------------------- */}
+  <HeroVideo
+    lang={lang}
+    eyebrow={c.heroEyebrow}
+    heading={c.h1}
+    lead={c.heroLead}
+    scrollLabel={c.scroll}
+    playLabel={c.playLabel}
+    pauseLabel={c.pauseLabel}
+  />
 
-    <div class="wrap hero__inner">
-      <div class="hero__stack">
-        <p class="eyebrow hero__eyebrow">{c.heroEyebrow}</p>
-        <h1 class="hero__title">{c.h1}</h1>
-        <p class="hero__lead">{c.heroLead}</p>
-        <div class="hero__actions">
-          <WhatsAppCTA lang={lang} label={c.heroCta} product={lang === "bm" ? "Pertanyaan umum" : "General enquiry"} />
-          <a class="hero__quiet" href={href("packages", lang)}>{c.heroQuiet}</a>
+  {/* ---- 02 · Vision. Theme 1, light. -------------------------------- */}
+  <section class="band" id="after-hero" data-theme-section="1">
+    <div class="rail">
+      <div class="split">
+        <div>
+          <p class="eyebrow-b">{c.visionEyebrow}</p>
+          <Reveal as="h2" text={c.visionTitle} class="title-b title-b--lg" />
+          <p class="lead-b">{c.visionLead}</p>
+          <p class="vision__cta">
+            <a class="link-b" href={href("about", lang)}>{c.visionCta}</a>
+          </p>
         </div>
-        <p class="hero__tagline">{COMPANY.tagline}</p>
+        <figure class="vision__fig">
+          <Img
+            slot="cm-stilt-lagoon"
+            alt={creditAlt("cm-stilt-lagoon", lang)}
+            sizes="(min-width: 900px) 46vw, 92vw"
+            ratio="3 / 4"
+          />
+          <figcaption class="cap-b">{c.visionImgCap}</figcaption>
+        </figure>
       </div>
     </div>
-
-    {/* WCAG 2.2.2 — the looping plate must be stoppable. */}
-    <button
-      class="hero__motion"
-      id="hero-motion"
-      type="button"
-      hidden
-      data-play={c.playLabel}
-      data-pause={c.pauseLabel}
-      aria-label={c.pauseLabel}
-    >
-      <svg class="hero__motion-pause" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-        <rect x="4" y="3" width="2.5" height="10" fill="currentColor" />
-        <rect x="9.5" y="3" width="2.5" height="10" fill="currentColor" />
-      </svg>
-      <svg class="hero__motion-play" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-        <path d="M5 3l8 5-8 5z" fill="currentColor" />
-      </svg>
-    </button>
-
-    <p class="hero__credit">{c.heroCredit}</p>
   </section>
 
-  {/* ---- 01 · Where you are ------------------------------------------- */}
-  <section class="section--tall band-place" id="semporna" data-surface="sand" data-reveal>
-    <div class="wrap">
-      <div class="place__grid">
-        <div class="place__text">
-          <p class="eyebrow">{c.b0eyebrow}</p>
-          <h2 class="sec__title">{c.b0title}</h2>
-          <p class="sec__lead">{c.b0lead}</p>
-          <ul class="place__list">
-            {c.places.map((p) => (
-              <li>
-                <h3 class="place__name">{p.n}</h3>
-                <p class="place__desc">{p.d}</p>
+  {/* ---- 03 · Resorts, as a drag gallery. Theme 1, light. ------------ */}
+  <section class="band band--tight" data-theme-section="1">
+    <div class="rail">
+      <p class="eyebrow-b">{c.resortsEyebrow}</p>
+      <Reveal as="h2" text={c.resortsTitle} class="title-b title-b--lg" />
+      <p class="sub-b resorts__sub">{c.resortsSub}</p>
+    </div>
+
+    <div class="resorts__strip">
+      <DragGallery lang={lang} id="resort-strip" label={c.resortsTitle}>
+        {resortCards.map(({ resort, tile, still, from }) => (
+          <a class="rcard" href={resortDetailPath(resort.slug, lang)}>
+            <div class="rcard__media">
+              {tile
+                ? <VideoTile tile={tile} lang={lang} showLabel={false} ratio="3 / 4" />
+                : <Img slot={still} alt={creditAlt(still, lang)} sizes="(min-width: 900px) 26vw, 72vw" ratio="3 / 4" />}
+            </div>
+            <p class="rcard__name">{resort.name}</p>
+            <p class="rcard__room">{resort.room}</p>
+            <p class="rcard__price">
+              <span class="rcard__from">{c.from}</span>
+              <Gated value={from} kind="price" blocker={resort.blockers?.[0]} lang={lang} />
+              <span class="rcard__per">{c.perPerson}</span>
+            </p>
+          </a>
+        ))}
+      </DragGallery>
+    </div>
+
+    <div class="rail resorts__more">
+      <a class="link-b" href={href("resorts", lang)}>{c.resortsMore}</a>
+    </div>
+  </section>
+
+  {/* ---- 04 · Packages, the comparison table. Theme 3, sand. ---------
+      Logic untouched — this is a restyle. Every cell still renders through
+      <Gated>, so a missing amount is the approved fallback, never a raw
+      blocker token and never 0. */}
+  <section class="band" id="pakej" data-theme-section="3">
+    <div class="rail">
+      <div class="pkg__head">
+        <p class="eyebrow-b">{c.pkgEyebrow}</p>
+        <Reveal as="h2" text={c.pkgTitle} class="title-b" />
+        <p class="lead-b">{c.pkgLead}</p>
+      </div>
+    </div>
+    <div class="rail pkg__table">
+      <PriceComparison lang={lang} />
+    </div>
+  </section>
+
+  {/* ---- 05 · Diving & Sipadan. Theme 2, dark. Asymmetric grid. ------ */}
+  <section class="band" data-theme-section="2">
+    <div class="rail">
+      <div class="dive">
+        <div class="dive__text">
+          <p class="eyebrow-b">{c.diveEyebrow}</p>
+          <Reveal as="h2" text={c.diveTitle} class="title-b title-b--lg" />
+          <p class="lead-b">{c.diveLead}</p>
+          <div class="dive__cta">
+            <WhatsAppCTA lang={lang} code="SPTT-DV-SIPADAN" product="Sipadan" label={c.diveCta} />
+            <a class="link-b" href={href("diving", lang)}>{c.diveLink}</a>
+          </div>
+        </div>
+
+        <div class="dive__grid">
+          <figure class="dive__wide">
+            <Img
+              slot="cm-sipadan-wall"
+              alt={creditAlt("cm-sipadan-wall", lang)}
+              sizes="(min-width: 900px) 52vw, 92vw"
+              ratio="3 / 2"
+            />
+          </figure>
+          {diveTiles.map((t) => (
+            <VideoTile tile={t} lang={lang} showLabel={false} class="dive__tile" />
+          ))}
+          <figure class="dive__tall">
+            <Img
+              slot="cm-turtle"
+              alt={creditAlt("cm-turtle", lang)}
+              sizes="(min-width: 900px) 26vw, 46vw"
+              ratio="3 / 4"
+            />
+          </figure>
+          <figure class="dive__tall">
+            <Img
+              slot="cm-jackfish"
+              alt={creditAlt("cm-jackfish", lang)}
+              sizes="(min-width: 900px) 26vw, 46vw"
+              ratio="3 / 4"
+            />
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ---- 06 · Day trips. Theme 1, light. ----------------------------- */}
+  <section class="band" data-theme-section="1">
+    <div class="rail">
+      <div class="split">
+        <div>
+          <p class="eyebrow-b">{c.tripEyebrow}</p>
+          <Reveal as="h2" text={c.tripTitle} class="title-b" />
+          <p class="lead-b">{c.tripLead}</p>
+          <ul class="trips">
+            {DAY_TRIPS.map((tr) => (
+              <li class="trip">
+                <span class="trip__where">
+                  <span class="trip__area">{tr.area[lang]}</span>
+                  <span class="trip__dest">{tr.destinations.join(" · ")}</span>
+                </span>
+                <span class="trip__price">
+                  <Gated value={tr.local} kind="price" blocker="B02" lang={lang} />
+                  <span class="trip__per">{c.perPerson}</span>
+                </span>
               </li>
             ))}
           </ul>
+          <p class="vision__cta">
+            <a class="link-b" href={href("dayTrips", lang)}>{c.tripLink}</a>
+          </p>
         </div>
-        <figure class="place__figure">
-          <Img slot="harian-island" alt={c.b0imgAlt} sizes="(min-width: 960px) 42vw, 100vw" ratio="4 / 5" />
-          <figcaption>{c.genNote}</figcaption>
+        <figure class="vision__fig">
+          <Img
+            slot="cm-white-beach"
+            alt={creditAlt("cm-white-beach", lang)}
+            sizes="(min-width: 900px) 46vw, 92vw"
+            ratio="4 / 5"
+          />
         </figure>
       </div>
-
-      <div class="life">
-        <h3 class="life__head">{c.lifeHead}</h3>
-        <ul class="life__row">
-          {c.life.map((it) => (
-            <li class="life__item">
-              <Img slot={it.slot as any} alt={it.alt} sizes="(min-width: 768px) 30vw, 90vw" ratio="1 / 1" />
-              <span class="life__name">{it.n}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   </section>
 
-  {/* ---- 02 · Resort price list --------------------------------------- */}
-  <section class="section--tall band-light" id="pakej" data-surface="light" data-reveal>
-    <div class="wrap">
-      <div class="band-head">
-        <p class="eyebrow eyebrow--center">{c.b1eyebrow}</p>
-        <h2 class="sec__title sec__title--center">{c.b1title}</h2>
-        <p class="sec__lead sec__lead--center">{c.b1lead}</p>
-      </div>
-
-      <div class="pricelist">
-        <div class="pricelist__head" aria-hidden="true">
-          <span class="pricelist__head-name">{c.b1colName}</span>
-          {DURS.map((d) => <span class="pricelist__head-col">{durLabels[d]}</span>)}
-        </div>
-        <ul class="pricelist__rows">
-          {featured.map((r) => (
-            <li>
-              <a class="prow" href={resortDetailPath(r.slug, lang)}>
-                <span class="prow__name">
-                  <span class="prow__mark" aria-hidden="true"></span>
-                  <span>
-                    <span class="prow__title">{r.name}</span>
-                    <span class="prow__room">{r.room}</span>
-                  </span>
-                </span>
-                {DURS.map((d) => (
-                  <span class="prow__cell">
-                    <span class="prow__k">{durLabels[d]}</span>
-                    <Gated value={r.prices[d]} kind="price" blocker={r.blockers?.[0]} lang={lang} />
-                  </span>
-                ))}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div class="band-cta band-cta--center">
-        <WhatsAppCTA lang={lang} label={c.b1cta} product={c.b1ctaProduct} />
-        <a class="band-cta__quiet" href={href("packages", lang)}>{c.b1more}</a>
-      </div>
-    </div>
-  </section>
-
-  {/* ---- 03 · Day trips ------------------------------------------------ */}
-  <section class="section--tall band-bleed" data-surface="sand" data-reveal>
-    <div class="band-bleed__grid">
-      <div class="band-bleed__text">
-        <p class="eyebrow">{c.b2eyebrow}</p>
-        <h2 class="sec__title">{c.b2title}</h2>
-        <p class="sec__lead">{c.b2lead}</p>
-        <ul class="trips">
-          {DAY_TRIPS.map((tr) => (
-            <li class="trip">
-              <div>
-                <h3 class="trip__name">{tr.area[lang]}</h3>
-                <p class="trip__dest">{tr.destinations.join(" · ")}</p>
-              </div>
-              <p class="trip__price">
-                <Gated value={tr.local} kind="price" blocker="B02" lang={lang} />
-                <span>{c.perPerson}</span>
-              </p>
-            </li>
-          ))}
-        </ul>
-        <a class="pill" href={href("dayTrips", lang)}>{c.b2link}</a>
-      </div>
-      <div class="band-bleed__media band-bleed__media--right">
-        <Img slot="harian-hero" alt={c.b2imgAlt} sizes="(min-width: 960px) 50vw, 100vw" />
-      </div>
-    </div>
-  </section>
-
-  {/* ---- 03b · Guest gallery ------------------------------------------
-      The only real photographs on the site. Cleared 2026-09-02 (CONTEXT.md §5).
-      Sits between the sand band above and the dark diving band below, so the
-      two-tone oscillation still alternates. */}
+  {/* ---- 06b · The seven cleared guest photographs, large. -----------
+      CONTEXT.md §5: these frames render ONLY inside <GuestGallery>, which
+      labels them in the page as real guest photos published with permission.
+      The drag layout is a layout switch, not an exit from that component. */}
   <GuestGallery
     lang={lang}
+    theme="1"
     surface="light"
-    items={gallery(["boatGroup", "heartSandbar", "sandbarSea"], lang)}
+    layout="drag"
+    id="guest-strip"
+    eyebrow={c.tripPhotoEyebrow}
+    title={c.tripPhotoTitle}
+    lead={c.tripPhotoLead}
+    items={gallery(
+      ["boatGroup", "boheyDulang", "sandbarSea", "boatSelfie", "heartSandbar", "groupSign", "boatThumbs"],
+      lang,
+    )}
   />
 
-  {/* ---- 04 · Diving --------------------------------------------------- */}
-  <section class="section--tall band-bleed band-bleed--dive" data-surface="dark" data-reveal>
-    <div class="band-bleed__grid">
-      <div class="band-bleed__text">
-        <p class="eyebrow">{c.b3eyebrow}</p>
-        <h2 class="sec__title">{c.b3title}</h2>
-        <p class="sec__lead">{c.b3lead}</p>
-        <div class="band-cta band-cta--start">
-          <WhatsAppCTA lang={lang} code="SPTT-DV-SIPADAN" product="Sipadan" label={c.b3cta} />
-          <a class="pill" href={href("diving", lang)}>{c.b3link}</a>
-        </div>
-      </div>
-      <div class="band-bleed__media band-bleed__media--left">
-        <Img slot="selam-hero" alt={c.b3imgAlt} sizes="(min-width: 960px) 50vw, 100vw" />
-      </div>
+  {/* ---- 07 · Gallery of reels. Theme 3, sand. ----------------------- */}
+  <section class="band" data-theme-section="3">
+    <div class="rail">
+      <p class="eyebrow-b">{c.galEyebrow}</p>
+      <Reveal as="h2" text={c.galTitle} class="title-b" />
+      <p class="lead-b">{c.galLead}</p>
+    </div>
+    <div class="gal__strip">
+      <DragGallery lang={lang} id="reel-strip" label={c.galTitle}>
+        {galleryTiles.map((t) => <VideoTile tile={t} lang={lang} />)}
+      </DragGallery>
     </div>
   </section>
 
-  {/* ---- 05 · Planner -------------------------------------------------- */}
-  <section class="section--tall band-light" data-surface="light" data-reveal>
-    <div class="wrap">
-      <div class="band-head">
-        <p class="eyebrow eyebrow--center">{c.b4eyebrow}</p>
-        <h2 class="sec__title sec__title--center">{c.b4title}</h2>
-        <p class="sec__lead sec__lead--center">{c.b4lead}</p>
-      </div>
+  {/* ---- 08 · Fullscreen teaser with the marquee. Theme 2, dark. ----- */}
+  <FullscreenTeaser
+    lang={lang}
+    eyebrow={c.teaserEyebrow}
+    title={c.teaserTitle}
+    lead={c.teaserLead}
+    marquee={c.teaserMarquee}
+    href={href("planner", lang)}
+    cta={c.teaserCta}
+  />
+
+  {/* ---- 09 · Trip shaper. Theme 1, light. --------------------------- */}
+  <section class="band" data-theme-section="1">
+    <div class="rail plan">
+      <p class="eyebrow-b">{c.planEyebrow}</p>
+      <Reveal as="h2" text={c.planTitle} class="title-b" />
+      <p class="lead-b">{c.planLead}</p>
       <ol class="steps">
-        {c.b4steps.map((s, i) => (
+        {c.planSteps.map((s, i) => (
           <li class="steps__item">
             <span class="steps__n" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-            <p class="steps__q">{s}</p>
+            <span class="steps__q">{s}</span>
           </li>
         ))}
       </ol>
-      <div class="band-cta band-cta--center">
-        <a class="pill" href={href("planner", lang)}>{c.b4link}</a>
-      </div>
+      <p class="plan__cta">
+        <a class="link-b" href={href("planner", lang)}>{c.planLink}</a>
+      </p>
+    </div>
+  </section>
+
+  {/* ---- 10 · Master nav strip. Theme 3, sand. ----------------------- */}
+  <section class="band band--tight" data-theme-section="3">
+    <div class="rail">
+      <p class="eyebrow-b">{c.navEyebrow}</p>
+      <Reveal as="h2" text={c.navTitle} class="title-b" />
+      <ul class="master">
+        {MASTER.map((id, i) => (
+          <li class="master__item">
+            <a class="master__link" href={ROUTES[id][lang]}>
+              <span class="master__n" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+              <span class="master__t">{ROUTES[id].title[lang]}</span>
+              <span class="master__arrow" aria-hidden="true">→</span>
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   </section>
 </Base>
 
-<script>
-  /**
-   * The hero plate. Sources are attached HERE, never in markup, so a
-   * reduced-motion or Save-Data visitor never downloads ~3 MB of video —
-   * they get the poster, which is a still frame of the same plate.
-   */
-  const video = document.getElementById("hero-video") as HTMLVideoElement | null;
-  const toggle = document.getElementById("hero-motion") as HTMLButtonElement | null;
-
-  if (video && toggle) {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const conn = (navigator as any).connection;
-    const thrifty = Boolean(conn?.saveData) || /2g/.test(conn?.effectiveType ?? "");
-
-    function attach() {
-      if (video!.dataset.loaded) return;
-      const mp4 = document.createElement("source");
-      mp4.type = "video/mp4";
-      mp4.src = video!.dataset.mp4!;
-      video!.append(mp4);
-      video!.dataset.loaded = "1";
-      video!.load();
-    }
-
-    function setState(playing: boolean) {
-      toggle!.setAttribute("aria-pressed", String(!playing));
-      toggle!.setAttribute(
-        "aria-label",
-        playing ? toggle!.dataset.pause! : toggle!.dataset.play!,
-      );
-      toggle!.toggleAttribute("data-paused", !playing);
-    }
-
-    if (!reduce && !thrifty) {
-      attach();
-      video.play().then(() => {
-        toggle.hidden = false;
-        setState(true);
-      }).catch(() => {
-        /* Autoplay refused (some low-power modes). Offer it as a control. */
-        toggle.hidden = false;
-        setState(false);
-      });
-    } else {
-      // Poster only. The button becomes an opt-in, not a pause.
-      setState(false);
-      toggle.hidden = false;
-    }
-
-    /* Distinguishes "the visitor pressed pause" from "the browser hid the tab".
-       Only the first one survives the tab coming back into view. */
-    let userPaused = reduce || thrifty;
-
-    toggle.addEventListener("click", () => {
-      if (video.paused) {
-        attach();
-        userPaused = false;
-        void video.play();
-        setState(true);
-      } else {
-        userPaused = true;
-        video.pause();
-        setState(false);
-      }
-    });
-
-    // Do not burn a decode loop on a tab nobody is looking at — but do give the
-    // plate back when the visitor returns, unless they paused it themselves.
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        if (!video.paused) video.pause();
-      } else if (!userPaused && video.paused) {
-        void video.play().then(() => setState(true)).catch(() => setState(false));
-      }
-    });
-  }
-</script>
-
 <style>
-  /* ======================================================================
-     HERO — a plate, a headline, a button
-     ====================================================================== */
-  .hero {
-    position: relative;
-    isolation: isolate;
-    background: var(--color-deep);
-    color: var(--color-paper);
-    /* Exactly the viewport MINUS the sticky header. A flat 94svh pushed the
-       bottom edge below the fold by the header's own height. --hdr-h is the
-       live header height (theme.css), so this stays correct as the bar
-       shrinks on scroll. */
-    min-height: clamp(30rem, calc(100svh - var(--hdr-h)), 56rem);
+  /* ---- Vision + day trips: the 50/50 with a bleeding figure ---------- */
+  .vision__fig { margin: 0; }
+  .vision__cta { margin-top: clamp(2rem, 4vw, 3rem); }
+
+  .cap-b {
+    margin-top: 0.875rem;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--s-rule, var(--t-rule));
+    font-size: var(--text-caption);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--s-muted, var(--t-muted));
+  }
+
+  /* ---- Resorts strip ------------------------------------------------ */
+  .resorts__sub { margin-top: 1.25rem; }
+  .resorts__strip { margin-top: clamp(2.5rem, 5vw, 4rem); }
+  .resorts__more { margin-top: 2.5rem; }
+
+  .rcard {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+  .rcard__media { border-radius: 0; overflow: hidden; }
+  .rcard :global(.img img) { border-radius: 0; }
+
+  .rcard__name {
+    margin: 1.125rem 0 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-heading-sm);
+    line-height: 1.2;
+  }
+  .rcard__room,
+  .rcard__price {
+    margin: 0.35rem 0 0;
+    font-size: var(--text-caption);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--s-muted, var(--t-muted));
+  }
+  .rcard__price {
     display: flex;
-    align-items: center;
-    overflow: hidden;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+    color: inherit;
+  }
+  .rcard__from,
+  .rcard__per { color: var(--s-muted, var(--t-muted)); }
+  .rcard:hover .rcard__name { color: var(--s-accent, var(--t-accent)); }
+
+  /* ---- Packages ----------------------------------------------------- */
+  .pkg__head { max-width: 46rem; }
+  .pkg__table { margin-top: clamp(2.5rem, 5vw, 4rem); }
+
+  /* ---- Diving: text left, an asymmetric grid right ------------------ */
+  .dive { display: grid; gap: clamp(2.5rem, 6vw, 5rem); }
+  @media (min-width: 1000px) {
+    .dive { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); align-items: start; }
+    .dive__text { position: sticky; top: 9rem; }
   }
 
-  /* ---- Plate ---- */
-  .hero__media { position: absolute; inset: 0; z-index: -2; }
-  .hero__video,
-  .hero__media > .hero__scrim { position: absolute; inset: 0; }
-  .hero__video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    /* Pulled toward the brand slate so the plate never fights the palette. */
-    filter: saturate(0.82) contrast(1.02);
-  }
-  /* Two scrims, not a decorative glow: they are what buy the text its contrast
-     ratio over moving footage. The horizontal one anchors the left column
-     (eyebrow, h1, lead, CTA); the vertical one seals the top strip under the
-     header and the bottom into the band below. Measured against the brightest
-     frame of the plate — the surface foam — not the average one. */
-  .hero__scrim {
-    background:
-      linear-gradient(
-        to right,
-        color-mix(in oklab, var(--color-deep) 92%, transparent) 0%,
-        color-mix(in oklab, var(--color-deep) 82%, transparent) 34%,
-        color-mix(in oklab, var(--color-deep) 44%, transparent) 62%,
-        color-mix(in oklab, var(--color-deep) 30%, transparent) 100%
-      ),
-      linear-gradient(
-        to bottom,
-        color-mix(in oklab, var(--color-deep) 72%, transparent) 0%,
-        color-mix(in oklab, var(--color-deep) 34%, transparent) 30%,
-        color-mix(in oklab, var(--color-deep) 46%, transparent) 68%,
-        var(--color-deep) 100%
-      );
-  }
-  /* Narrow screens have no right-hand column to protect, so the horizontal
-     scrim flattens into an even wash rather than a side-lit one. */
-  @media (max-width: 899px) {
-    .hero__scrim {
-      background:
-        linear-gradient(
-          to bottom,
-          color-mix(in oklab, var(--color-deep) 84%, transparent) 0%,
-          color-mix(in oklab, var(--color-deep) 70%, transparent) 40%,
-          color-mix(in oklab, var(--color-deep) 78%, transparent) 74%,
-          var(--color-deep) 100%
-        );
-    }
-  }
-
-  /* ---- Content ---- */
-  .hero__inner {
-    position: relative;
-    z-index: 1;
-    padding-block: clamp(6rem, 15vh, 9rem) clamp(7rem, 18vh, 10rem);
-  }
-  .hero__stack {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    max-width: min(48rem, 100%);
-  }
-  .hero__eyebrow { color: var(--color-paper-muted); margin-bottom: 1.25rem; }
-
-  .hero__title {
-    font-size: clamp(2.5rem, 5.4vw, 4.5rem);
-    font-weight: 500;
-    line-height: 1.06;
-    letter-spacing: -0.005em;
-    max-width: 20ch;
-  }
-
-  .hero__lead {
-    margin-top: 1.75rem;
-    max-width: 52ch;
-    font-size: var(--text-body);
-    line-height: 1.75;
-    color: var(--color-paper-muted);
-  }
-  .hero__actions {
-    margin-top: 2.25rem;
+  .dive__cta {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1rem 1.75rem;
+    gap: 1rem 2rem;
+    margin-top: clamp(2rem, 4vw, 3rem);
   }
-  .hero__tagline {
-    margin-top: 3rem;
+
+  .dive__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(0.75rem, 1.6vw, 1.25rem);
+  }
+  .dive__wide { grid-column: 1 / -1; margin: 0; }
+  .dive__tall { margin: 0; }
+  /* The second tile drops half a row, which is the asymmetry the reference
+     gets from its own staggered grid. */
+  .dive__grid > :global(.dive__tile:nth-child(3)) { transform: translateY(clamp(1rem, 3vw, 3rem)); }
+  .dive__grid :global(.img img) { border-radius: 0; }
+
+  /* ---- Gallery ------------------------------------------------------ */
+  .gal__strip { margin-top: clamp(2.5rem, 5vw, 4rem); }
+
+  /* ---- Day trip list ------------------------------------------------ */
+  .trips { list-style: none; margin: clamp(2rem, 4vw, 3rem) 0 0; padding: 0; }
+  .trip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    padding: 1.125rem 0;
+    border-top: 1px solid var(--s-rule, var(--t-rule));
+  }
+  .trip:last-child { border-bottom: 1px solid var(--s-rule, var(--t-rule)); }
+  .trip__where { display: grid; gap: 0.3rem; }
+  .trip__area { font-size: var(--text-subheading); line-height: 1.3; }
+  .trip__dest,
+  .trip__per {
     font-size: var(--text-caption);
-    font-weight: 500;
-    letter-spacing: 0.24em;
+    letter-spacing: 2px;
     text-transform: uppercase;
-    color: var(--color-paper-muted);
+    color: var(--s-muted, var(--t-muted));
   }
+  .trip__price { display: inline-flex; align-items: baseline; gap: 0.5rem; }
 
-  .hero__quiet {
-    display: inline-flex; align-items: center; min-height: 44px;
-    font-size: var(--text-body-sm); letter-spacing: 0.02em; color: var(--color-paper);
-    text-decoration: underline; text-underline-offset: 6px; text-decoration-color: var(--color-gold-soft);
-    transition: color var(--dur-micro) var(--ease-micro);
+  /* ---- Trip shaper -------------------------------------------------- */
+  .plan { max-width: 52rem; }
+  .steps { list-style: none; margin: clamp(2.5rem, 5vw, 3.5rem) 0 0; padding: 0; }
+  .steps__item {
+    display: grid;
+    grid-template-columns: 3.5rem 1fr;
+    gap: 1.5rem;
+    align-items: baseline;
+    padding: 1.25rem 0;
+    border-top: 1px solid var(--s-rule, var(--t-rule));
   }
-  .hero__quiet:hover { color: var(--color-gold-soft); }
-
-  /* ---- Motion control (WCAG 2.2.2) ---- */
-  .hero__motion {
-    position: absolute;
-    right: clamp(1rem, 3vw, 2rem);
-    bottom: clamp(4.5rem, 9vw, 6rem);
-    z-index: 2;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border: 1px solid var(--color-rule-dark);
-    border-radius: var(--radius-pill);
-    background: color-mix(in oklab, var(--color-deep) 72%, transparent);
-    color: var(--color-paper);
-    cursor: pointer;
-    transition: background-color var(--dur-micro) var(--ease-micro);
-  }
-  .hero__motion:hover { background: var(--color-deep-lift); }
-  .hero__motion svg { width: 15px; height: 15px; }
-  .hero__motion .hero__motion-play { display: none; }
-  .hero__motion[data-paused] .hero__motion-play { display: block; }
-  .hero__motion[data-paused] .hero__motion-pause { display: none; }
-
-  .hero__credit {
-    position: absolute;
-    left: 0; right: 0;
-    bottom: clamp(4.5rem, 9vw, 6rem);
-    z-index: 2;
-    margin-inline: auto;
-    padding-inline: 1.5rem;
-    max-width: var(--page-max);
-    text-align: center;
-    font-size: 0.625rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--color-paper-muted);
-    opacity: 0.75;
-  }
-  @media (max-width: 639px) {
-    .hero__credit { text-align: left; bottom: 4.25rem; }
-    .hero__motion { bottom: 4.25rem; }
-  }
-
-
-
-
-  /* ======================================================================
-     01 · Where you are
-     ====================================================================== */
-  .band-place { overflow-x: clip; }
-  .place__grid { display: grid; gap: 3rem; align-items: start; }
-  @media (min-width: 960px) {
-    .place__grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 5rem; }
-    /* The figure hangs lower than the text — the asymmetry is the point. */
-    .place__figure { margin-top: 4.5rem; }
-  }
-  .place__figure { margin: 0; }
-  .place__figure figcaption {
-    margin-top: 0.75rem;
-    font-size: 0.625rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--color-ink-muted);
-  }
-
-  .place__list { list-style: none; margin: 2.75rem 0 0; padding: 0; }
-  .place__list li {
-    padding-block: 1.125rem;
-    border-top: 1px solid var(--color-rule-light);
-  }
-  .place__list li:last-child { border-bottom: 1px solid var(--color-rule-light); }
-  .place__name {
-    font-family: var(--font-body);
-    font-size: var(--text-caption);
+  .steps__item:last-child { border-bottom: 1px solid var(--s-rule, var(--t-rule)); }
+  .steps__n {
+    font-family: var(--font-display);
     font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--color-ink);
+    font-size: var(--text-subheading);
+    /* A numeral is text, so it takes the text-safe accent (themes.css). */
+    color: var(--s-accent-ink, var(--t-accent-ink));
+    font-variant-numeric: tabular-nums;
   }
-  .place__desc {
-    margin-top: 0.4rem;
-    font-size: var(--text-body-sm);
-    line-height: 1.65;
-    max-width: 46ch;
-    color: var(--color-ink-muted);
-  }
+  .steps__q { font-size: var(--text-lead); line-height: var(--lh-lead); }
+  .plan__cta { margin-top: clamp(2rem, 4vw, 3rem); }
 
-  .life { margin-top: clamp(3.5rem, 8vw, 5.5rem); }
-  .life__head {
-    font-family: var(--font-body);
-    font-size: var(--text-caption);
-    font-weight: 600;
-    letter-spacing: 0.17em;
-    text-transform: uppercase;
-    color: var(--color-ink-muted);
-    padding-bottom: 1.25rem;
-    border-bottom: 1px solid var(--color-rule-light);
-  }
-  .life__row {
+  /* ---- Master nav strip --------------------------------------------- */
+  .master {
     list-style: none;
-    margin: 2rem 0 0;
+    margin: clamp(2.5rem, 5vw, 4rem) 0 0;
     padding: 0;
     display: grid;
-    gap: 1.5rem;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .life__item { position: relative; }
-  /* Each plate sits one step lower than the last — a slow stair, not a row. */
-  @media (min-width: 768px) {
-    .life__item:nth-child(2) { margin-top: 2.25rem; }
-    .life__item:nth-child(3) { margin-top: 4.5rem; }
+  @media (min-width: 760px) {
+    .master { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(2rem, 5vw, 5rem); }
   }
-  .life__item :global(img) { filter: saturate(0.86); }
-  .life__name {
-    display: block;
-    margin-top: 0.75rem;
-    font-size: var(--text-caption);
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--color-ink-muted);
-  }
-
-  /* ======================================================================
-     02–05 · unchanged editorial bands
-     ====================================================================== */
-  .band-light { overflow-x: clip; }
-  .band-head { display: flex; flex-direction: column; align-items: center; text-align: center; }
-  .band-cta__quiet {
-    display: inline-flex; align-items: center; min-height: 44px;
-    font-size: var(--text-body-sm); color: var(--color-ink);
-    text-decoration: underline; text-underline-offset: 6px; text-decoration-color: var(--color-gold);
-    transition: color var(--dur-micro) var(--ease-micro);
-  }
-  .band-cta__quiet:hover { color: var(--color-deep-lift); }
-
-  .pricelist { margin-top: 3.5rem; }
-  .pricelist__head, .prow {
+  .master__item { border-top: 1px solid var(--s-rule, var(--t-rule)); }
+  .master__link {
     display: grid;
-    grid-template-columns: minmax(0, 1.7fr) repeat(3, minmax(0, 0.7fr));
+    grid-template-columns: 3rem 1fr auto;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
+    min-height: 44px;
+    padding: 1.125rem 0;
+    color: inherit;
+    text-decoration: none;
   }
-  .pricelist__head { padding: 0 0.75rem 0.875rem; border-bottom: 1px solid var(--color-border-light); }
-  .pricelist__head-name, .pricelist__head-col {
-    font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.17em; text-transform: uppercase; color: var(--color-ink-muted);
+  .master__n {
+    font-size: var(--text-caption);
+    letter-spacing: 2px;
+    color: var(--s-muted, var(--t-muted));
+    font-variant-numeric: tabular-nums;
   }
-  .pricelist__head-col { text-align: right; }
-  .pricelist__rows { list-style: none; margin: 0; padding: 0; }
-  .prow {
-    padding: 1.375rem 0.75rem; margin-inline: -0.75rem;
-    border-bottom: 1px solid var(--color-rule-light);
-    text-decoration: none; color: var(--color-ink);
-    transition: background-color var(--dur-micro) var(--ease-micro);
+  .master__t {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-heading-sm);
+    line-height: 1.25;
   }
-  .prow:hover { background: var(--color-parchment); }
-  .prow__name { display: flex; align-items: baseline; gap: 0.875rem; min-width: 0; }
-  .prow__mark { flex: none; width: 6px; height: 6px; background: var(--color-gold); transform: rotate(45deg) translateY(-2px); }
-  .prow__title { display: block; font-family: var(--font-display); font-size: var(--text-heading-sm); font-weight: 500; line-height: 1.15; }
-  .prow__room { display: block; margin-top: 0.2rem; font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-ink-muted); }
-  .prow__cell { text-align: right; font-size: var(--text-body); font-weight: 500; font-variant-numeric: tabular-nums; }
-  /* Wide layout: the duration is a visible column header, so the per-cell label
-     is screen-reader-only (the .pricelist__head above is aria-hidden). It turns
-     back into visible text in the stacked mobile layout below. */
-  .prow__k {
-    position: absolute; width: 1px; height: 1px;
-    margin: -1px; padding: 0; overflow: hidden;
-    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  .master__arrow {
+    color: var(--s-accent, var(--t-accent));
+    transition: transform var(--dur-micro) var(--ease-micro);
   }
-  @media (max-width: 767px) {
-    .pricelist__head { display: none; }
-    .prow { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; padding-block: 1.25rem; }
-    .prow__name { grid-column: 1 / -1; }
-    .prow__k {
-      position: static; display: block; width: auto; height: auto;
-      margin: 0 0 0.2rem; overflow: visible; clip: auto; white-space: normal;
-      font-size: 0.625rem; font-weight: 600; letter-spacing: 0.14em;
-      text-transform: uppercase; color: var(--color-ink-muted);
-    }
-  }
+  .master__link:hover .master__arrow { transform: translateX(6px); }
+  .master__link:hover .master__t { color: var(--s-accent, var(--t-accent)); }
 
-  .band-bleed { overflow-x: clip; }
-  .band-bleed__grid {
-    max-width: var(--page-max); margin-inline: auto; padding-inline: 1.5rem;
-    display: grid; gap: 3rem; align-items: center;
-  }
-  @media (min-width: 768px) { .band-bleed__grid { padding-inline: 3rem; } }
-  @media (min-width: 960px) {
-    .band-bleed__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4rem; }
-    .band-bleed--dive .band-bleed__media { grid-column: 1; grid-row: 1; margin-left: min(-3rem, calc((var(--page-max) - 100vw) / 2 - 4rem)); }
-    .band-bleed--dive .band-bleed__text { grid-column: 2; grid-row: 1; }
-    .band-bleed__media--right { margin-right: min(-3rem, calc((var(--page-max) - 100vw) / 2 - 4rem)); }
-  }
-  @media (max-width: 959px) { .band-bleed__media { margin-inline: -1.5rem; } }
-  @media (min-width: 768px) and (max-width: 959px) { .band-bleed__media { margin-inline: -3rem; } }
-  .band-bleed__media :global(picture), .band-bleed__media :global(img) { width: 100%; height: 100%; }
-  .band-bleed__media :global(img) { min-height: 380px; object-fit: cover; }
-
-  .trips { list-style: none; margin: 2.75rem 0 0; padding: 0; }
-  .trip { display: flex; align-items: baseline; justify-content: space-between; gap: 1.5rem; padding-block: 1.125rem; border-top: 1px solid var(--color-rule-light); }
-  .trip:last-child { border-bottom: 1px solid var(--color-rule-light); }
-  .trip__name { font-family: var(--font-display); font-size: var(--text-heading-sm); font-weight: 500; line-height: 1.2; }
-  .trip__dest { margin-top: 0.2rem; font-size: var(--text-body-sm); color: var(--color-ink-muted); }
-  .trip__price { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .trip__price span { display: block; margin-top: 0.15rem; font-weight: 400; font-size: var(--text-caption); letter-spacing: 0.06em; color: var(--color-ink-muted); }
-  .band-bleed__text .pill { margin-top: 2.5rem; }
-
-  .steps { list-style: none; margin: 3.5rem 0 0; padding: 0; display: grid; gap: 2rem; }
-  @media (min-width: 768px) {
-    .steps { grid-template-columns: repeat(3, 1fr); gap: 0; }
-    .steps__item { padding-inline: 2rem; }
-    .steps__item:first-child { padding-left: 0; }
-    .steps__item + .steps__item { border-left: 1px solid var(--color-rule-light); }
-  }
-  .steps__n { display: block; font-size: var(--text-caption); font-weight: 600; letter-spacing: 0.17em; color: var(--color-gold); }
-  .steps__q { margin-top: 0.75rem; font-size: var(--text-body); line-height: 1.65; max-width: 30ch; }
-  @media (max-width: 767px) {
-    .steps__item { border-top: 1px solid var(--color-rule-light); padding-block: 1.5rem; }
-    .steps__item:first-child { border-top: 0; padding-top: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .master__arrow { transition: none; }
+    .dive__grid > :global(.dive__tile:nth-child(3)) { transform: none; }
   }
 </style>

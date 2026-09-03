@@ -1,0 +1,485 @@
+{
+  "built": [
+    {
+      "id": "reel-DYvfflFlOUm",
+      "src": "Videos\\sem4naparadise\\2026-05-25_DYvfflFlOUm_1.mp4",
+      "subject": "dayang",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 215594,
+        "mp4": 242376,
+        "webp": 22880
+      }
+    },
+    {
+      "id": "reel-DYLXK2Mmhr0",
+      "src": "Videos\\sem4naparadise\\2026-05-11_DYLXK2Mmhr0_1.mp4",
+      "subject": "snorkel",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 220941,
+        "mp4": 200240,
+        "webp": 23016
+      }
+    },
+    {
+      "id": "reel-DYs1XOjlJZ0",
+      "src": "Videos\\sem4naparadise\\2026-05-24_DYs1XOjlJZ0_1.mp4",
+      "subject": "sea",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 220187,
+        "mp4": 200135,
+        "webp": 22844
+      }
+    },
+    {
+      "id": "reel-DYf-Di4CKls",
+      "src": "Videos\\sem4naparadise\\2026-05-19_DYf-Di4CKls_1.mp4",
+      "subject": "sibuan",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 234191,
+        "mp4": 280785,
+        "webp": 29376
+      }
+    },
+    {
+      "id": "reel-DYdtpTljegA",
+      "src": "Videos\\sem4naparadise\\2026-05-18_DYdtpTljegA_1.mp4",
+      "subject": "sea",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 242627,
+        "mp4": 320776,
+        "webp": 31206
+      }
+    },
+    {
+      "id": "reel-DYqQmLAgWrX",
+      "src": "Videos\\sem4naparadise\\2026-05-23_DYqQmLAgWrX_1.mp4",
+      "subject": "seawalk",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 216104,
+        "mp4": 246209,
+        "webp": 23430
+      }
+    },
+    {
+      "id": "reel-DYx-76rCndJ",
+      "src": "Videos\\sem4naparadise\\2026-05-26_DYx-76rCndJ_1.mp4",
+      "subject": "sea",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 192585,
+        "mp4": 202085,
+        "webp": 14894
+      }
+    },
+    {
+      "id": "reel-DYYUu8dlCB4",
+      "src": "Videos\\sem4naparadise\\2026-05-16_DYYUu8dlCB4_1.mp4",
+      "subject": "sea",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 172684,
+        "mp4": 160241,
+        "webp": 10634
+      }
+    },
+    {
+      "id": "reel-DY-26OoDedL",
+      "src": "Videos\\sem4naparadise\\2026-05-31_DY-26OoDedL_1.mp4",
+      "subject": "sea",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 197573,
+        "mp4": 299970,
+        "webp": 14980
+      }
+    },
+    {
+      "id": "reel-Dae6cQeEY26",
+      "src": "Videos\\sem4naparadise\\2026-07-07_Dae6cQeEY26_1.mp4",
+      "subject": "snorkel",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 279112,
+        "mp4": 239661,
+        "webp": 33704
+      }
+    },
+    {
+      "id": "reel-DYijbaLCXo0",
+      "src": "Videos\\sem4naparadise\\2026-05-20_DYijbaLCXo0_1.mp4",
+      "subject": "sea",
+      "w": 420,
+      "h": 236,
+      "bytes": {
+        "webm": 108373,
+        "mp4": 60970,
+        "webp": 6270
+      }
+    },
+    {
+      "id": "reel-DamqD8ejlUM",
+      "src": "Videos\\sem4naparadise\\2026-07-10_DamqD8ejlUM_1.mp4",
+      "subject": "sea",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 227959,
+        "mp4": 333794,
+        "webp": 21542
+      }
+    },
+    {
+      "id": "reel-DY0jrp6DNA5",
+      "src": "Videos\\sem4naparadise\\2026-05-27_DY0jrp6DNA5_1.mp4",
+      "subject": "guests",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 116521,
+        "mp4": 109830,
+        "webp": 17324
+      }
+    },
+    {
+      "id": "reel-DXk0xrAAl7f",
+      "src": "Videos\\sem4naparadise\\2026-04-26_DXk0xrAAl7f_1.mp4",
+      "subject": "booth",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 193979,
+        "mp4": 185318,
+        "webp": 33454
+      }
+    },
+    {
+      "id": "reel-DbCPWvdT0hz",
+      "src": "Videos\\sem4naparadise\\2026-07-21_DbCPWvdT0hz_1.mp4",
+      "subject": "sea",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 74736,
+        "mp4": 71101,
+        "webp": 6994
+      }
+    },
+    {
+      "id": "reel-Dahfw-eDaK2",
+      "src": "Videos\\sem4naparadise\\2026-07-08_Dahfw-eDaK2_1.mp4",
+      "subject": "hopping",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 207752,
+        "mp4": 276557,
+        "webp": 17780
+      }
+    },
+    {
+      "id": "reel-DUhGISVks1s",
+      "src": "Videos\\sem4naparadise\\2026-02-09_DUhGISVks1s_1.mp4",
+      "subject": "honeymoon",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 330216,
+        "mp4": 315959,
+        "webp": 91714
+      }
+    },
+    {
+      "id": "reel-DaUmm",
+      "src": "Videos\\sem4naparadise\\2026-07-03_DaUmm_OlCZy_1.mp4",
+      "subject": "snorkel",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 193238,
+        "mp4": 189984,
+        "webp": 12816
+      }
+    },
+    {
+      "id": "reel-DauV1jpx4C9",
+      "src": "Videos\\sem4naparadise\\2026-07-13_DauV1jpx4C9_1.mp4",
+      "subject": "snorkel",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 217087,
+        "mp4": 225639,
+        "webp": 24252
+      }
+    },
+    {
+      "id": "reel-DYI0us",
+      "src": "Videos\\sem4naparadise\\2026-05-10_DYI0us_koiM_1.mp4",
+      "subject": "sea",
+      "w": 420,
+      "h": 236,
+      "bytes": {
+        "webm": 113001,
+        "mp4": 82483,
+        "webp": 7032
+      }
+    },
+    {
+      "id": "reel-DajnIoXCSts",
+      "src": "Videos\\sem4naparadise\\2026-07-09_DajnIoXCSts_1.mp4",
+      "subject": "sea",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 202010,
+        "mp4": 176963,
+        "webp": 35272
+      }
+    },
+    {
+      "id": "reel-DUUROpCEvtm",
+      "src": "Videos\\sem4naparadise\\2026-02-04_DUUROpCEvtm_1.mp4",
+      "subject": "honeymoon",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 218595,
+        "mp4": 247209,
+        "webp": 22348
+      }
+    },
+    {
+      "id": "reel-DYnrsm5DMF8",
+      "src": "Videos\\sem4naparadise\\2026-05-22_DYnrsm5DMF8_1.mp4",
+      "subject": "royal",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 168219,
+        "mp4": 130409,
+        "webp": 20658
+      }
+    },
+    {
+      "id": "reel-Da38CbYzyF4",
+      "src": "Videos\\sem4naparadise\\2026-07-17_Da38CbYzyF4_1.mp4",
+      "subject": "adil",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 187045,
+        "mp4": 197661,
+        "webp": 15582
+      }
+    },
+    {
+      "id": "reel-DY3Olyzisf7",
+      "src": "Videos\\sem4naparadise\\2026-05-28_DY3Olyzisf7_1.mp4",
+      "subject": "bihing",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 196371,
+        "mp4": 161834,
+        "webp": 18604
+      }
+    },
+    {
+      "id": "reel-DY8SKpQjZhK",
+      "src": "Videos\\sem4naparadise\\2026-05-30_DY8SKpQjZhK_1.mp4",
+      "subject": "sisipan",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 204478,
+        "mp4": 186218,
+        "webp": 16170
+      }
+    },
+    {
+      "id": "reel-DYN6RsbEpQp",
+      "src": "Videos\\sem4naparadise\\2026-05-11_DYN6RsbEpQp_1.mp4",
+      "subject": "paghalian",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 182720,
+        "mp4": 161179,
+        "webp": 27382
+      }
+    },
+    {
+      "id": "reel-DUUiQDlkshW",
+      "src": "Videos\\sem4naparadise\\2026-02-04_DUUiQDlkshW_1.mp4",
+      "subject": "honeymoon",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 233986,
+        "mp4": 188829,
+        "webp": 38196
+      }
+    },
+    {
+      "id": "reel-DYnruNyDtRQ",
+      "src": "Videos\\sem4naparadise\\2026-05-22_DYnruNyDtRQ_1.mp4",
+      "subject": "maglami",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 222601,
+        "mp4": 212724,
+        "webp": 21022
+      }
+    },
+    {
+      "id": "reel-DY5tWTZjUya",
+      "src": "Videos\\sem4naparadise\\2026-05-29_DY5tWTZjUya_1.mp4",
+      "subject": "nusakuya",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 185569,
+        "mp4": 235087,
+        "webp": 17320
+      }
+    },
+    {
+      "id": "reel-DaXT4CQj3A4",
+      "src": "Videos\\sem4naparadise\\2026-07-04_DaXT4CQj3A4_1.mp4",
+      "subject": "royal",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 181789,
+        "mp4": 137760,
+        "webp": 16004
+      }
+    },
+    {
+      "id": "reel-DYIyOZpiV3-",
+      "src": "Videos\\sem4naparadise\\2026-05-10_DYIyOZpiV3-_1.mp4",
+      "subject": "sea",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 171907,
+        "mp4": 174098,
+        "webp": 9572
+      }
+    },
+    {
+      "id": "reel-DYvaKb",
+      "src": "Videos\\sem4naparadise\\2026-05-25_DYvaKb_gb6v_1.mp4",
+      "subject": "singamata",
+      "w": 420,
+      "h": 746,
+      "bytes": {
+        "webm": 158124,
+        "mp4": 149322,
+        "webp": 15124
+      }
+    },
+    {
+      "id": "reel-DazmDKqgV2p",
+      "src": "Videos\\sem4naparadise\\2026-07-15_DazmDKqgV2p_1.mp4",
+      "subject": "hopping",
+      "w": 420,
+      "h": 752,
+      "bytes": {
+        "webm": 119843,
+        "mp4": 115463,
+        "webp": 15974
+      }
+    },
+    {
+      "id": "reel-DbFATUxjbje",
+      "src": "Videos\\sem4naparadise\\2026-07-22_DbFATUxjbje_1.mp4",
+      "subject": "honeymoon",
+      "w": 420,
+      "h": 752,
+      "bytes": {
+        "webm": 224501,
+        "mp4": 233259,
+        "webp": 3898
+      }
+    },
+    {
+      "id": "reel-DZUbEYiEzpF",
+      "src": "Videos\\sem4naparadise\\2026-06-08_DZUbEYiEzpF_1.mp4",
+      "subject": "snorkel",
+      "w": 420,
+      "h": 754,
+      "bytes": {
+        "webm": 201273,
+        "mp4": 267417,
+        "webp": 8886
+      }
+    },
+    {
+      "id": "reel-DZR2TAEDpxu",
+      "src": "Videos\\sem4naparadise\\2026-06-07_DZR2TAEDpxu_1.mp4",
+      "subject": "snorkel",
+      "w": 420,
+      "h": 684,
+      "bytes": {
+        "webm": 169130,
+        "mp4": 138131,
+        "webp": 16832
+      }
+    },
+    {
+      "id": "reel-DXilygWjDeA",
+      "src": "Videos\\sem4naparadise\\2026-04-25_DXilygWjDeA_1.mp4",
+      "subject": "honeymoon",
+      "w": 420,
+      "h": 526,
+      "bytes": {
+        "webm": 174252,
+        "mp4": 196318,
+        "webp": 22484
+      }
+    },
+    {
+      "id": "reel-DXilyfuDCDo",
+      "src": "Videos\\sem4naparadise\\2026-04-25_DXilyfuDCDo_2.mp4",
+      "subject": "honeymoon",
+      "w": 420,
+      "h": 526,
+      "bytes": {
+        "webm": 218442,
+        "mp4": 220619,
+        "webp": 16704
+      }
+    },
+    {
+      "id": "reel-DXilyhjjB-P",
+      "src": "Videos\\sem4naparadise\\2026-04-25_DXilyhjjB-P_3.mp4",
+      "subject": "honeymoon",
+      "w": 420,
+      "h": 526,
+      "bytes": {
+        "webm": 162787,
+        "mp4": 141202,
+        "webp": 14932
+      }
+    }
+  ],
+  "generated": "2026-09-03T17:02:58.787Z"
+}

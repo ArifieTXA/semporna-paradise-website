@@ -1,0 +1,197 @@
+---
+/**
+ * <DragGallery> — the drag slider, motion inventory #5.
+ *
+ * The reference uses Swiper 11 (40 KB) for a slider that does one thing: hold
+ * a horizontal strip you can drag or flick. CSS `scroll-snap` already does the
+ * scrolling, the snapping, the keyboard, the touch and the momentum, natively
+ * and for nothing. All that is missing on a desktop mouse is click-and-drag,
+ * which is the ~30 lines below.
+ *
+ * Because it is a scroller and not a widget:
+ *   - Tab moves through the slides in order, with no roving-tabindex to get
+ *     wrong.
+ *   - The arrows are a convenience, not the only way through. They are hidden
+ *     from assistive tech, which already has a better one.
+ *   - It works with JavaScript off. Only mouse-drag is lost.
+ *
+ * `overscroll-behavior-inline: contain` stops a horizontal flick from
+ * triggering the browser's back-swipe gesture.
+ */
+import type { Lang } from "../lib/gated";
+
+interface Props {
+  lang: Lang;
+  /** Accessible name for the scroll region. */
+  label: string;
+  /** Track id, so more than one gallery can live on a page. */
+  id: string;
+  class?: string;
+}
+
+const { lang, label, id, class: className = "" } = Astro.props;
+
+const t = {
+  bm: { prev: "Slaid sebelum", next: "Slaid seterusnya", hint: "Seret untuk melihat" },
+  en: { prev: "Previous slides", next: "Next slides", hint: "Drag to explore" },
+}[lang];
+---
+
+<div class:list={["dg", className]} data-drag-gallery>
+  <div
+    class="dg__track"
+    id={id}
+    tabindex="0"
+    role="group"
+    aria-label={label}
+    data-drag-track
+  >
+    <slot />
+  </div>
+
+  <div class="dg__bar">
+    <p class="dg__hint">{t.hint}</p>
+    <div class="dg__nav" aria-hidden="true">
+      <button class="dg__btn" type="button" data-drag-prev tabindex="-1" title={t.prev}>
+        <svg viewBox="0 0 24 24" width="16" height="16" focusable="false" aria-hidden="true">
+          <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.5" />
+        </svg>
+      </button>
+      <button class="dg__btn" type="button" data-drag-next tabindex="-1" title={t.next}>
+        <svg viewBox="0 0 24 24" width="16" height="16" focusable="false" aria-hidden="true">
+          <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.5" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .dg { --dg-gap: clamp(1rem, 2vw, 1.5rem); }
+
+  .dg__track {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: clamp(15rem, 26vw, 22rem);
+    gap: var(--dg-gap);
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: clamp(1.5rem, 4vw, 4rem);
+    padding-inline: clamp(1.5rem, 4vw, 4rem);
+    padding-block: 0.25rem;
+    scrollbar-width: none;
+  }
+  .dg__track::-webkit-scrollbar { display: none; }
+  .dg__track > :global(*) { scroll-snap-align: start; }
+
+  /* The whole strip is one tab stop, so it needs a visible focus ring. */
+  .dg__track:focus-visible {
+    outline: 2px solid var(--s-focus, var(--t-focus));
+    outline-offset: 4px;
+  }
+
+  .dg[data-dragging] .dg__track {
+    cursor: grabbing;
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+    user-select: none;
+  }
+
+  .dg__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-inline: clamp(1.5rem, 4vw, 4rem);
+  }
+
+  .dg__hint {
+    margin: 0;
+    font-size: var(--text-caption);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--s-muted, var(--t-muted));
+  }
+
+  .dg__nav { display: flex; gap: 0.5rem; }
+
+  .dg__btn {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    background: none;
+    border: 1px solid var(--s-border, var(--t-border));
+    border-radius: 0;
+    color: inherit;
+    cursor: pointer;
+  }
+  .dg__btn:hover {
+    background: var(--s-border, var(--t-border));
+    color: var(--s-bg, var(--t-bg));
+  }
+  /* Section backgrounds are painted by [data-theme-section]; mirror the pair. */
+  [data-theme-section="1"] .dg__btn:hover { color: #FFFFFF; }
+  [data-theme-section="2"] .dg__btn:hover { color: #0A1628; }
+  [data-theme-section="3"] .dg__btn:hover { color: #F1EBE0; }
+
+  @media (max-width: 559px) {
+    .dg__nav { display: none; }
+  }
+</style>
+
+<script>
+  /**
+   * Mouse click-and-drag. Touch, trackpad, keyboard and momentum are already
+   * handled by the browser's own scroller — this only adds the one gesture a
+   * desktop mouse does not have.
+   */
+  for (const root of document.querySelectorAll<HTMLElement>("[data-drag-gallery]")) {
+    const track = root.querySelector<HTMLElement>("[data-drag-track]");
+    if (!track) continue;
+
+    let down = false;
+    let startX = 0;
+    let startLeft = 0;
+    let moved = 0;
+
+    track.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "mouse" || e.button !== 0) return;
+      down = true;
+      moved = 0;
+      startX = e.clientX;
+      startLeft = track.scrollLeft;
+      root.setAttribute("data-dragging", "");
+    });
+
+    track.addEventListener("pointermove", (e) => {
+      if (!down) return;
+      const dx = e.clientX - startX;
+      moved = Math.abs(dx);
+      if (moved > 3) track.setPointerCapture(e.pointerId);
+      track.scrollLeft = startLeft - dx;
+    });
+
+    const end = (e: PointerEvent) => {
+      if (!down) return;
+      down = false;
+      root.removeAttribute("data-dragging");
+      if (track.hasPointerCapture?.(e.pointerId)) track.releasePointerCapture(e.pointerId);
+    };
+    track.addEventListener("pointerup", end);
+    track.addEventListener("pointercancel", end);
+
+    // A drag that ends on a link must not also follow it.
+    track.addEventListener("click", (e) => {
+      if (moved > 6) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
+
+    const page = () => Math.max(track.clientWidth * 0.8, 240);
+    root.querySelector("[data-drag-prev]")?.addEventListener("click", () =>
+      track.scrollBy({ left: -page(), behavior: "smooth" }));
+    root.querySelector("[data-drag-next]")?.addEventListener("click", () =>
+      track.scrollBy({ left: page(), behavior: "smooth" }));
+  }
+</script>

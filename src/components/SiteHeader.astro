@@ -1,24 +1,36 @@
 ---
 /**
- * Fixed shell, BelArosa pattern: a white full-width bar with no shadow —
- * hamburger + "MENU" left, the centred logo lockup (gold diamond mark,
- * serif wordmark, tracked "TRAVEL & TOURS" beneath), language + outlined
- * "TEMPOH" pill right — and beneath it, on desktop, the sub-category row
- * of uppercase tracked slate links with a honey-gold underline for the
- * active state. A hairline appears after 40px of scroll — a border
- * appearing, not a shadow (the reference is shadowless throughout).
+ * SiteHeader — rebuilt to the BelArosa pattern, 2026-09-04.
  *
- * Every target is >= 44x44px. v1 shipped 18px nav targets (defect #12).
- * Every href comes from the typed route map, so a dead link is a compile error.
+ * Measured off the reference at 1920px (~/website-clones/belarosa-chalet/):
  *
- * The lockup carries the Semporna Paradise fish mark (a modern flat-vector
- * redraw of the owner's logo, generated 2026-09-02) to the left of the
- * wordmark. It replaces the provisional gold diamond.
+ *   MENU (hamburger + tracked label) ...... left, over the hero, no background
+ *   the logo ...... a solid dark tile hanging from the top edge, dead centre
+ *   language + one outlined button ........ right
+ *
+ * There is no nav bar. Every link lives in <MenuOverlay>, which the MENU button
+ * opens. That is the reference's whole navigation model and it is why its hero
+ * can be edge-to-edge with nothing floating over it.
+ *
+ * ── The header follows the live scroll theme ─────────────────────────────
+ * The bar itself is TRANSPARENT and its text is `var(--t-text)`. Because
+ * src/lib/scroll-theme.ts rewrites `--t-text` on <html> as sections cross
+ * mid-viewport, the header text turns white over a dark band and dark over a
+ * light one, with no per-section class and no scroll handler of its own. This
+ * is the single most recognisable thing about the reference.
+ *
+ * The centred logo tile is the exception: it is a fixed Ocean Deep block, so
+ * its contents stay white on every theme, exactly as the reference's does.
+ *
+ * Rules kept from the previous header: every target is >= 44x44 (v1 shipped
+ * 18px targets, defect #12), and every href comes from the typed route map, so
+ * a dead link is a compile error rather than a 404 (defect #4).
+ * Hard rule 4 — the licence is a LABEL. Nothing here claims validity.
  */
-import { navRoutes, href, navTitle, ROUTES, type RouteId, type Lang } from "../lib/routes";
-import { COMPANY } from "../data/config";
+import { href, ROUTES, type RouteId, type Lang } from "../lib/routes";
+import { COMPANY, PRIMARY_WA } from "../data/config";
 import { waLink } from "../lib/whatsapp";
-import { PRIMARY_WA } from "../data/config";
+import MenuOverlay from "./MenuOverlay.astro";
 
 interface Props {
   lang: Lang;
@@ -29,428 +41,223 @@ interface Props {
 
 const { lang, route, path, twinPath } = Astro.props;
 
-const items = navRoutes();
-const current = route ? ROUTES[route][lang] : path;
-
-/**
- * Current-section match by PREFIX, not equality — so deep pages
- * (/resort/[slug]/, /selam-padi/sipadan/, /pakej/resort/, the /en/ twins…)
- * still light their parent nav item. The site root is exact-only, because
- * every path starts with "/" and every EN path with "/en/". The Trust &
- * Safety page has no nav item of its own — it sits under the About item.
- */
-const homePath = ROUTES.home[lang];
-const trustPath = ROUTES.trust[lang];
-function isCurrent(id: RouteId): "page" | undefined {
-  const target = ROUTES[id][lang];
-  if (target === homePath) return current === homePath ? "page" : undefined;
-  if (!current) return undefined;
-  let hit = current === target || current.startsWith(target);
-  if (id === "about" && !hit) hit = current === trustPath || current.startsWith(trustPath);
-  return hit ? "page" : undefined;
-}
+const t = {
+  bm: { menu: "Menu", wa: "WhatsApp", other: "EN", otherFull: "Tukar ke English", skipTo: "Menu utama" },
+  en: { menu: "Menu", wa: "WhatsApp", other: "BM", otherFull: "Switch to Bahasa Malaysia", skipTo: "Main menu" },
+}[lang];
 
 // The language toggle points at THIS page's twin, never at the site root.
 const otherLang: Lang = lang === "bm" ? "en" : "bm";
 const twinHref = route ? ROUTES[route][otherLang] : (twinPath ?? (otherLang === "en" ? "/en/" : "/"));
 
 const homeHref = href("home", lang);
-const menuLabel = lang === "bm" ? "Menu" : "Menu";
-const closeLabel = lang === "bm" ? "Tutup menu" : "Close menu";
-const navLabel = lang === "bm" ? "Navigasi utama" : "Main navigation";
-const bookLabel = lang === "bm" ? "Tempahan" : "Book";
-// Contact + FAQ were removed from the header on the owner's instruction
-// (2026-09-02). Both still live in the footer's Information column.
-const lockupSub = "Travel & Tours";
-const waUrl = waLink({ product: lang === "bm" ? "Tempahan am" : "General booking" }, lang, PRIMARY_WA);
+const waUrl = waLink(
+  { product: lang === "bm" ? "Pertanyaan umum" : "General enquiry" },
+  lang,
+  PRIMARY_WA,
+);
 ---
 
 <header class="hdr" data-nav>
-  <div class="hdr__bar">
-    <div class="hdr__inner wrap">
-      <div class="hdr__side hdr__side--start">
-        <button class="burger" type="button" aria-expanded="false" aria-controls="mobile-nav">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path fill="none" stroke="currentColor" stroke-width="1.5" d="M3 7h18M3 12h18M3 17h18" />
-          </svg>
-          <span class="burger__label">{menuLabel}</span>
-        </button>
-      </div>
+  <div class="hdr__row">
+    <button
+      class="hdr__menu"
+      id="menu-open"
+      type="button"
+      aria-expanded="false"
+      aria-controls="menu-overlay"
+    >
+      <svg class="hdr__burger" viewBox="0 0 24 24" width="20" height="14" aria-hidden="true" focusable="false">
+        <path fill="none" stroke="currentColor" stroke-width="1.4" d="M2 5h20M2 12h20M2 19h20" />
+      </svg>
+      <span class="hdr__menu-text">{t.menu}</span>
+    </button>
 
-      <a class="brand" href={homeHref} aria-label={`${COMPANY.shortName} — ${COMPANY.legalName}`}>
-        <img
-          class="brand__mark"
-          src="/brand/fish-mark.png"
-          srcset="/brand/fish-mark.png 1x, /brand/fish-mark@2x.png 2x"
-          alt=""
-          width="44"
-          height="44"
-          decoding="async"
-          fetchpriority="high"
-        />
-        <span class="brand__lockup">
-          <span class="brand__name">Semporna Paradise</span>
-          <span class="brand__sub">{lockupSub}</span>
-        </span>
+    <a class="hdr__logo" href={homeHref} aria-label={`${COMPANY.shortName} — ${COMPANY.legalName}`}>
+      <img
+        src="/brand/fish-mark.png"
+        srcset="/brand/fish-mark.png 1x, /brand/fish-mark@2x.png 2x"
+        width="44"
+        height="44"
+        alt=""
+        decoding="async"
+      />
+      <span class="hdr__wordmark">Semporna<br />Paradise</span>
+      <span class="hdr__sub">{COMPANY.licenceLabel}</span>
+    </a>
+
+    <div class="hdr__end">
+      <a class="hdr__lang" href={twinHref} hreflang={otherLang === "bm" ? "ms-MY" : "en-MY"} title={t.otherFull}>
+        <span aria-hidden="true">{t.other}</span>
+        <span class="u-sr">{t.otherFull}</span>
       </a>
-
-      <div class="hdr__side hdr__side--end">
-        <a class="lang" href={twinHref} hreflang={otherLang === "bm" ? "ms-MY" : "en-MY"}>
-          {otherLang === "bm" ? "BM" : "EN"}
-        </a>
-        <a class="book" href={waUrl} target="_blank" rel="noopener noreferrer">{bookLabel}</a>
-      </div>
-    </div>
-
-    <nav class="subnav wrap" aria-label={navLabel}>
-      <ul class="subnav__list">
-        {items.map((id) => (
-          <li>
-            <a
-              href={href(id, lang)}
-              aria-current={isCurrent(id)}
-            >
-              {navTitle(id, lang)}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  </div>
-
-  <div
-    class="sheet"
-    id="mobile-nav"
-    hidden
-    data-surface="dark"
-    role="dialog"
-    aria-modal="true"
-    aria-label={navLabel}
-  >
-    <div class="sheet__inner wrap">
-      <button class="sheet__close" type="button">
-        <span class="u-sr">{closeLabel}</span>
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path fill="none" stroke="currentColor" stroke-width="1.5" d="m5 5 14 14M19 5 5 19" />
-        </svg>
-      </button>
-      <p class="sheet__eyebrow">{COMPANY.licenceLabel} &middot; Semporna, Sabah</p>
-      <ul class="sheet__list">
-        {items.map((id) => (
-          <li>
-            <a href={href(id, lang)}
-               aria-current={isCurrent(id)}>
-              {navTitle(id, lang)}
-            </a>
-          </li>
-        ))}
-      </ul>
+      <a class="hdr__wa" href={waUrl} rel="noopener">{t.wa}</a>
     </div>
   </div>
 </header>
 
-<script>
-  const header = document.querySelector<HTMLElement>(".hdr");
-  const burger = header?.querySelector<HTMLButtonElement>(".burger");
-  const sheet = header?.querySelector<HTMLElement>(".sheet");
-  const closeBtn = header?.querySelector<HTMLButtonElement>(".sheet__close");
-
-  if (burger && sheet && closeBtn) {
-    const focusables = () =>
-      Array.from(sheet.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"));
-
-    function open() {
-      sheet!.hidden = false;
-      burger!.setAttribute("aria-expanded", "true");
-      document.documentElement.style.overflow = "hidden";
-      focusables()[0]?.focus();
-    }
-
-    function close() {
-      sheet!.hidden = true;
-      burger!.setAttribute("aria-expanded", "false");
-      document.documentElement.style.overflow = "";
-      burger!.focus();
-    }
-
-    burger.addEventListener("click", open);
-    closeBtn.addEventListener("click", close);
-
-    document.addEventListener("keydown", (e) => {
-      if (sheet.hidden) return;
-
-      if (e.key === "Escape") { close(); return; }
-
-      // Focus trap.
-      if (e.key === "Tab") {
-        const list = focusables();
-        if (!list.length) return;
-        const first = list[0];
-        const last = list[list.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault(); last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault(); first.focus();
-        }
-      }
-    });
-  }
-</script>
+<MenuOverlay lang={lang} route={route} />
 
 <style>
-  .u-sr {
-    position: absolute; width: 1px; height: 1px;
-    padding: 0; margin: -1px; overflow: hidden;
-    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
-  }
+  /* The bar floats over the page with no background of its own, exactly like
+     the reference — that is what lets the hero run edge to edge.
 
+     ── Deliberate deviation, found in QA at 1440px, 2026-09-04 ────────────
+     Past the hero it takes a solid background. The reference can stay
+     transparent the whole way down because every one of its sections is an
+     image or a short editorial block. Ours are not: the packages band is a
+     20-row price table, and with a transparent bar its rows scrolled up
+     *through* the header — a row's "TANYA DI WHATSAPP" button rendering on
+     top of the header's own WhatsApp button, and the sticky table head
+     showing rows through it.
+
+     So the bar is transparent at rest, which is the whole hero, and opaque
+     from 40px of scroll onward, which is where the collisions were. The
+     background follows the live scroll theme, so it still reads as one
+     surface with the section under it rather than as a separate chrome bar. */
   .hdr {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: var(--color-snow);
-    border-bottom: 1px solid transparent;
-    transition: border-color var(--dur-micro) var(--ease-micro);
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 60;
+    color: var(--t-text);
+    background: transparent;
+    transition:
+      color 700ms var(--ease-water),
+      background-color 700ms var(--ease-water);
   }
-  .hdr[data-scrolled] { border-bottom-color: var(--color-rule-light); }
+  .hdr[data-scrolled] { background: var(--t-bg); }
 
-  .hdr__bar { padding-block: 0.75rem; }
-  .hdr[data-scrolled] .hdr__bar { padding-block: 0.5rem; }
-  .hdr__bar { transition: padding var(--dur-micro) var(--ease-micro); }
+  /* A hairline under the opaque bar — a border appearing, never a shadow.
+     The reference is shadowless throughout and this stays true to that. */
+  .hdr[data-scrolled]::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 1px;
+    background: var(--t-rule);
+  }
 
-  .hdr__inner {
+  @media (prefers-reduced-motion: reduce) {
+    .hdr { transition: none; }
+  }
+
+  .hdr__row {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
-    align-items: center;
+    align-items: start;
     gap: 1rem;
+    padding: 0 clamp(1rem, 2.5vw, 2.5rem);
   }
 
-  .hdr__side { display: flex; align-items: center; gap: 0.625rem; }
-  .hdr__side--end { justify-content: flex-end; }
-
-  /* ---- Centre lockup ---- */
-  .brand {
-    display: flex;
+  /* ---- MENU, left ---- */
+  .hdr__menu {
+    justify-self: start;
+    display: inline-flex;
     align-items: center;
     gap: 0.875rem;
-    text-decoration: none;
-    color: var(--color-ink);
-    padding-block: 0.375rem;
-  }
-  .brand {
-    min-width: 0;
-    gap: clamp(0.5rem, 2vw, 0.875rem);
-  }
-  @media (max-width: 559px) {
-    .brand__name { font-size: 1.0625rem; }
-    .brand__sub  { letter-spacing: 0.3em; font-size: 0.5rem; }
-    .book { padding-inline: 1rem; }
-    .burger { padding-inline: 0 0.25rem; }
-    .burger__label { display: none; }
-  }
-  .brand__name {
-    display: block;
-    font-family: var(--font-display);
-    font-size: 1.375rem;
-    font-weight: 600;
-    line-height: 1.05;
-    letter-spacing: 0.01em;
-    white-space: nowrap;
-  }
-  .brand__sub {
-    display: block;
-    margin-top: 0.2rem;
-    font-size: 0.5625rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.42em;
-    text-align: center;
-    color: var(--color-ink-muted);
-  }
-  /* The Semporna Paradise fish mark. Decorative here — the <a> already
-     carries the accessible name — so alt="" and no separate label. */
-  .brand__mark {
-    flex: none;
-    width: clamp(26px, 5.6vw, 44px);
-    height: auto;
-    transition: transform var(--dur-enter) var(--ease-water);
-  }
-  .brand:hover .brand__mark { transform: translateX(3px) rotate(-4deg); }
-  @media (prefers-reduced-motion: reduce) {
-    .brand__mark, .brand:hover .brand__mark { transition: none; transform: none; }
-  }
-
-  /* ---- Left: burger + MENU ---- */
-  .burger {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.625rem;
     min-height: 44px;
-    padding-inline: 0.25rem 0.75rem;
-    background: transparent;
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.5rem 0.5rem 0.25rem;
+    background: none;
     border: 0;
-    color: var(--color-ink);
+    border-radius: 0;
+    color: inherit;
     cursor: pointer;
-  }
-  .burger svg { width: 22px; height: 22px; }
-  .burger__label {
+    font-family: var(--font-body);
     font-size: var(--text-caption);
-    font-weight: 600;
-    letter-spacing: 0.17em;
+    font-weight: 400;
+    letter-spacing: 2px;
     text-transform: uppercase;
   }
-  @media (min-width: 1024px) { .burger { visibility: hidden; pointer-events: none; } }
-  /* When the links row is collapsed on scroll, the Menu button returns at every width. */
-  .hdr[data-collapsed] .burger { visibility: visible; pointer-events: auto; }
+  .hdr__menu:hover .hdr__burger { transform: scaleX(0.82); }
+  .hdr__burger { transition: transform var(--dur-micro) var(--ease-micro); transform-origin: left; }
 
-  /* ---- Right: lang + BOOK pill ---- */
-  .lang {
+  /* ---- The logo tile, centred, hanging from the top edge ---- */
+  .hdr__logo {
+    justify-self: center;
+    display: grid;
+    justify-items: center;
+    gap: 0.35rem;
+    padding: 1rem clamp(1.25rem, 2.5vw, 2rem) 1.1rem;
+    background: #0A1628;   /* fixed, not themed — as on the reference */
+    color: #fff;
+    text-decoration: none;
+    border-radius: 0;
+    min-width: 8.5rem;
+  }
+
+  .hdr__wordmark {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.0625rem;
+    line-height: 1.08;
+    text-align: center;
+    letter-spacing: 0.01em;
+  }
+
+  .hdr__sub {
+    font-size: 0.5625rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #E0C08A;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- Language + WhatsApp, right ---- */
+  .hdr__end {
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .hdr__lang,
+  .hdr__wa {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-height: 44px;
     min-width: 44px;
-    min-height: 44px;
-    font-size: var(--text-caption);
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    color: var(--color-ink);
+    padding: 0.5rem 0.875rem;
+    color: inherit;
     text-decoration: none;
-  }
-  .lang:hover { color: var(--color-deep-lift); text-decoration: underline; text-underline-offset: 5px; }
-
-  .book {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    padding: 0.625rem 1.625rem;
-    border: 1.5px solid var(--color-border-light);
-    border-radius: var(--radius-pill);
+    border-radius: 0;
     font-size: var(--text-caption);
-    font-weight: 600;
-    letter-spacing: 0.17em;
+    font-weight: 400;
+    letter-spacing: 2px;
     text-transform: uppercase;
-    color: var(--color-ink);
-    text-decoration: none;
+  }
+
+  .hdr__wa {
+    border: 1px solid currentColor;
+    padding-inline: 1.125rem;
     transition:
       background-color var(--dur-micro) var(--ease-micro),
       color var(--dur-micro) var(--ease-micro);
   }
-  .book:hover { background: var(--color-deep); color: var(--color-paper); }
+  /* Hover inverts against whatever theme is live: the fill takes the current
+     text colour and the label takes the current background. One pair per
+     theme, so contrast is never accidental. */
+  .hdr__wa:hover { background: #0A1628; color: #FFFFFF; }
+  :global(:root[data-theme="2"]) .hdr__wa:hover { background: #FFFFFF; color: #0A1628; }
+  :global(:root[data-theme="3"]) .hdr__wa:hover { background: #0A1628; color: #F1EBE0; }
 
-  /* ---- Sub-nav: tracked uppercase, gold underline for active ---- */
-  .subnav { display: none; }
-  @media (min-width: 1024px) {
-    .subnav {
-      display: block;
-      border-top: 1px solid var(--color-rule-light);
-      margin-top: 0.5rem;
-      padding-block: 0.125rem;
-      overflow: hidden;
-      max-height: 8rem;
-      opacity: 1;
-      transition:
-        max-height var(--dur-micro) var(--ease-micro),
-        opacity var(--dur-micro) var(--ease-micro),
-        margin-top var(--dur-micro) var(--ease-micro),
-        padding-block var(--dur-micro) var(--ease-micro),
-        border-top-color var(--dur-micro) var(--ease-micro),
-        visibility var(--dur-micro) var(--ease-micro);
-    }
-    /* Past 120px scroll the links row slides away; the compact bar stays.
-       `visibility: hidden` takes the 6 links out of the tab order too — without
-       it, tabbing past the collapse point parks focus on a clipped link. */
-    .hdr[data-collapsed] .subnav {
-      max-height: 0;
-      opacity: 0;
-      margin-top: 0;
-      padding-block: 0;
-      border-top-color: transparent;
-      pointer-events: none;
-      visibility: hidden;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .subnav { transition: none; }
+  .hdr__lang:hover { color: var(--t-accent); }
+
+  .u-sr {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip-path: inset(50%);
+    white-space: nowrap; border: 0;
   }
 
-  .subnav__list {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 0.25rem 2rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  @media (max-width: 719px) {
+    .hdr__menu-text { display: none; }
+    .hdr__lang { padding-inline: 0.5rem; }
+    .hdr__wa { padding-inline: 0.875rem; }
+    .hdr__logo { min-width: 0; padding-inline: 0.875rem; }
+    .hdr__wordmark { font-size: 0.9375rem; }
   }
-  .subnav__list a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;              /* WCAG 2.2 target size */
-    font-size: var(--text-caption);
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-ink);
-    text-decoration: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: color var(--dur-micro) var(--ease-micro);
-  }
-  .subnav__list a:hover { color: var(--color-deep-lift); }
-  .subnav__list a[aria-current="page"] {
-    font-weight: 600;
-    border-bottom-color: var(--color-gold);
-  }
-
-  /* ---- Mobile sheet ---- */
-  .sheet {
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    background: var(--color-deep);
-    color: var(--color-paper);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  .sheet__inner { padding-block: 1.5rem 4rem; }
-
-  .sheet__eyebrow {
-    font-size: var(--text-caption);
-    letter-spacing: 0.17em;
-    text-transform: uppercase;
-    color: var(--color-paper-muted);
-    margin-top: 1.5rem;
-  }
-
-  .sheet__close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 44px;
-    min-height: 44px;
-    margin-left: auto;
-    border: 1px solid var(--color-rule-dark);
-    border-radius: var(--radius-pill);
-    background: transparent;
-    color: var(--color-paper);
-    cursor: pointer;
-  }
-  .sheet__close svg { width: 20px; height: 20px; }
-
-  .sheet__list { list-style: none; margin: 1rem 0 0; padding: 0; }
-  .sheet__list li + li { border-top: 1px solid var(--color-rule-dark); }
-  .sheet__list a {
-    display: flex;
-    align-items: center;
-    min-height: 56px;
-    font-family: var(--font-display);
-    font-size: 1.625rem;
-    font-weight: 500;
-    color: var(--color-paper);
-    text-decoration: none;
-  }
-  .sheet__list a[aria-current="page"] { color: var(--color-gold-soft); }
-
 </style>

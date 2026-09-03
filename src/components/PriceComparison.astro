@@ -442,4 +442,110 @@ function waFor(r: (typeof RESORTS)[number]) {
     .pc__sort button,
     .pc__cta a { transition-duration: 0.01ms; }
   }
+
+
+  /* ======================================================================
+     BelArosa restyle, 2026-09-04. RESTYLE ONLY — no logic, no markup and no
+     price path is touched. Every cell still renders through <Gated>.
+
+     `:global([data-theme-section])` is deliberate: the band that carries the
+     theme lives OUTSIDE this component, so an unscoped ancestor selector
+     would be rewritten by Astro's scoping and match nothing. Scoping it this
+     way also means /pakej/ and every other page still on the old surface
+     system renders exactly as it did before tonight.
+
+     What changes: the white panel goes transparent (depth comes from the
+     theme background, not from elevation), radii go to 0, the 1.5px borders
+     drop to a 1px hairline, and every label takes the 12px / 2px-tracked
+     reference type.
+     ====================================================================== */
+
+  :global([data-theme-section]) .pc,
+  :global([data-theme-section]) .pc__table,
+  :global([data-theme-section]) .pc__scroll,
+  :global([data-theme-section]) .pc__card {
+    background: transparent;
+    border-radius: 0;
+  }
+
+  /* The sticky header row and sticky first column must stay OPAQUE — an
+     opaque background is the entire reason they carry one, or rows scroll
+     visibly through them. They take the band's own colour rather than the
+     old fixed white, so they are opaque and on-theme at the same time. */
+  :global([data-theme-section="1"]) .pc__rhead,
+  :global([data-theme-section="1"]) .pc__rname,
+  :global([data-theme-section="1"]) .pc__table thead th { background: #FFFFFF; }
+  :global([data-theme-section="2"]) .pc__rhead,
+  :global([data-theme-section="2"]) .pc__rname,
+  :global([data-theme-section="2"]) .pc__table thead th { background: #0A1628; }
+  :global([data-theme-section="3"]) .pc__rhead,
+  :global([data-theme-section="3"]) .pc__rname,
+  :global([data-theme-section="3"]) .pc__table thead th { background: #F1EBE0; }
+
+  :global([data-theme-section]) .pc__rhead,
+  :global([data-theme-section]) .pc__rname,
+  :global([data-theme-section]) .pc__dhead,
+  :global([data-theme-section]) .pc__table thead th { border-radius: 0; }
+
+  :global([data-theme-section]) .pc__rhead,
+  :global([data-theme-section]) .pc__dhead {
+    border-bottom: 1px solid var(--s-border, var(--t-border));
+    letter-spacing: 2px;
+    color: var(--s-muted, var(--t-muted));
+  }
+
+  :global([data-theme-section]) .pc__row,
+  :global([data-theme-section]) .pc__price,
+  :global([data-theme-section]) .pc__rname,
+  :global([data-theme-section]) .pc__card,
+  :global([data-theme-section]) .pc__card-prices > * {
+    border-color: var(--s-rule, var(--t-rule));
+  }
+
+  :global([data-theme-section]) .pc__rtitle {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-subheading);
+  }
+
+  :global([data-theme-section]) .pc__rroom,
+  :global([data-theme-section]) .pc__field,
+  :global([data-theme-section]) .pc__sort {
+    letter-spacing: 2px;
+    color: var(--s-muted, var(--t-muted));
+  }
+
+  /* Controls and the per-row CTA: hairline outline, sharp, transparent. */
+  :global([data-theme-section]) .pc__field select,
+  :global([data-theme-section]) .pc__sort button,
+  :global([data-theme-section]) .pc__cta a,
+  :global([data-theme-section]) .pc__card a {
+    border: 1px solid var(--s-border, var(--t-border));
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    letter-spacing: 2px;
+  }
+  :global([data-theme-section]) .pc__cta a:hover,
+  :global([data-theme-section]) .pc__card a:hover,
+  :global([data-theme-section]) .pc__sort button[aria-pressed="true"] {
+    background: var(--s-border, var(--t-border));
+    color: #F1EBE0;
+  }
+
+  /* The sticky header row never actually stuck. `.pc__scroll` is
+     `overflow-x: auto`, whose computed `overflow-y` is also `auto`, and that
+     makes it the sticky containing block instead of the viewport — so `top`
+     resolved against a scrollport as tall as the table and the head just
+     scrolled away with it.
+
+     Measured 2026-09-04: the table's scrollWidth equals its clientWidth at
+     1920, 1440, 1024 and 768, i.e. it never overflows at any width where the
+     table is the layout at all (below 768px it reflows to cards). The
+     horizontal scroller is therefore doing nothing except suppressing the
+     sticky head, so it is switched off where the table renders. Below 768px
+     nothing changes, because there is no table there to scroll. */
+  @media (min-width: 768px) {
+    .pc__scroll { overflow: visible; }
+  }
 </style>

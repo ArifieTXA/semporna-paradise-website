@@ -1,0 +1,99 @@
+---
+/**
+ * <Reveal> — marks a heading for the word-by-word entrance (motion #1).
+ *
+ * The split itself happens in src/lib/reveal.ts at runtime, because a heading
+ * pre-split in the HTML would ship broken markup to a screen reader that never
+ * runs the script. Here we only tag it.
+ *
+ * `text` is a plain string on purpose: reveal.ts only splits an element whose
+ * whole content is one text node, and passing a slot would let nested markup in
+ * through the back door and silently downgrade to a whole-element fade.
+ *
+ *   <Reveal as="h1" text={c.h1} class="hero__title" />
+ */
+interface Props {
+  text: string;
+  as?: "h1" | "h2" | "h3" | "p" | "span";
+  class?: string;
+  id?: string;
+}
+
+const { text, as: Tag = "h2", class: className = "", id } = Astro.props;
+---
+
+<Tag id={id} class:list={["rv", className]} data-reveal-words>{text}</Tag>
+
+<style is:global>
+  /* ------------------------------------------------------------------------
+     The reveal, measured off the reference: each word clipped by a mask, the
+     word itself sitting 75% below its line, rising to 0 as it fades in.
+     900ms, the same easing curve as the rest of the site, 60ms between words.
+
+     Before the script runs the heading is a normal text node with opacity 0.
+     `@media (scripting: none)` and the <noscript> block in Base.astro both put
+     it back to 1, so a heading is NEVER invisible on a page without JS.
+     ------------------------------------------------------------------------ */
+
+  .rv {
+    opacity: 0;
+  }
+  .rv[data-split],
+  .rv[data-revealed],
+  .rv[data-reveal-fade] {
+    opacity: 1;
+  }
+
+  /* Whole-element fallback for a heading that could not be split. */
+  .rv[data-reveal-fade] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity var(--dur-reveal, 900ms) var(--ease-water),
+      transform var(--dur-reveal, 900ms) var(--ease-water);
+  }
+  .rv[data-reveal-fade][data-revealed] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .rv-w {
+    display: inline-block;
+    overflow: hidden;
+    /* A serif descender is clipped by `overflow: hidden` on a tight box, so
+       the mask is padded and pulled back by the same amount. */
+    padding-bottom: 0.14em;
+    margin-bottom: -0.14em;
+    vertical-align: bottom;
+  }
+
+  .rv-i {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(75%);
+    transition:
+      opacity var(--dur-reveal, 900ms) var(--ease-water),
+      transform var(--dur-reveal, 900ms) var(--ease-water);
+    will-change: transform, opacity;
+  }
+
+  .rv[data-revealed] .rv-i {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Reduced motion: reveal.ts never splits, so this only has to undo the
+     starting opacity. Nothing animates and nothing is hidden. */
+  @media (prefers-reduced-motion: reduce) {
+    .rv,
+    .rv-i {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
+  @media (scripting: none) {
+    .rv { opacity: 1 !important; }
+  }
+</style>

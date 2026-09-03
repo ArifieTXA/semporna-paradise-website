@@ -1,0 +1,257 @@
+---
+/**
+ * <MenuOverlay> — the hidden menu, motion inventory #6.
+ *
+ * The reference hides its whole navigation behind a MENU button and opens it as
+ * a full-screen Ocean Deep panel. Webflow does it with an interaction; this is
+ * ~40 lines of vanilla with the three things Webflow's version does not
+ * reliably give you:
+ *
+ *   1. `inert` on <main> and <footer> while open, so a screen reader and a Tab
+ *      press cannot walk into the page behind the panel.
+ *   2. A real focus trap, plus focus returned to the MENU button on close.
+ *   3. Escape closes it.
+ *
+ * Every href comes from the typed route map, so a dead link is a compile error
+ * rather than a 404 (defect #4).
+ *
+ * The panel is `display: none` until opened, so its links are out of the tab
+ * order without needing `tabindex="-1"` on each one, and the whole thing costs
+ * nothing on a page nobody opens the menu on.
+ */
+import { navRoutes, href, navTitle, ROUTES, type RouteId, type Lang } from "../lib/routes";
+import { COMPANY, WHATSAPP } from "../data/config";
+import { waLink } from "../lib/whatsapp";
+
+interface Props {
+  lang: Lang;
+  route?: RouteId;
+}
+
+const { lang, route } = Astro.props;
+
+const t = {
+  bm: { close: "Tutup menu", nav: "Navigasi utama", more: "Maklumat", wa: "WhatsApp kami" },
+  en: { close: "Close menu", nav: "Main navigation", more: "Information", wa: "WhatsApp us" },
+}[lang];
+
+const primary = navRoutes();
+const secondary = ["trust", "contact", "faq", "privacy", "terms"] as const satisfies readonly RouteId[];
+const waUrl = waLink({ product: lang === "bm" ? "Pertanyaan umum" : "General enquiry" }, lang);
+---
+
+<div class="ov" id="menu-overlay" hidden data-theme-ignore>
+  <div class="ov__panel" role="dialog" aria-modal="true" aria-label={t.nav}>
+    <div class="ov__bar">
+      <span class="ov__brand">{COMPANY.shortName}</span>
+      <button class="ov__close" type="button" id="menu-close" aria-label={t.close}>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+          <path d="M5 5l14 14M19 5L5 19" fill="none" stroke="currentColor" stroke-width="1.5" />
+        </svg>
+        <span class="ov__close-text">{t.close}</span>
+      </button>
+    </div>
+
+    <nav class="ov__body" aria-label={t.nav}>
+      <ul class="ov__primary">
+        {primary.map((id) => (
+          <li>
+            <a href={href(id, lang)} aria-current={route === id ? "page" : undefined}>
+              {navTitle(id, lang)}
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      <div class="ov__aside">
+        <p class="ov__head">{t.more}</p>
+        <ul class="ov__secondary">
+          {secondary.map((id) => (
+            <li>
+              <a href={ROUTES[id][lang]} aria-current={route === id ? "page" : undefined}>
+                {ROUTES[id].title[lang]}
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        <p class="ov__head ov__head--wa">{t.wa}</p>
+        <ul class="ov__wa">
+          {WHATSAPP.map((w) => (
+            <li><a href={`https://wa.me/${w.e164}`}>{w.display}</a></li>
+          ))}
+        </ul>
+        <a class="ov__cta" href={waUrl}>{t.wa}</a>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<style>
+  .ov {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: #0A1628;
+    color: #fff;
+    overflow-y: auto;
+  }
+  .ov[hidden] { display: none; }
+
+  .ov__panel {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem clamp(1.5rem, 4vw, 4rem) clamp(3rem, 6vw, 5rem);
+  }
+
+  .ov__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.5rem 2.5rem;
+    border-bottom: 1px solid #22344A;
+  }
+
+  .ov__brand {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-heading-sm);
+  }
+
+  .ov__close {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 44px;
+    padding: 0.5rem 0.75rem;
+    background: none;
+    border: 1px solid #F6F3EC;
+    border-radius: 0;
+    color: #fff;
+    cursor: pointer;
+    font-size: var(--text-caption);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .ov__close:hover { background: #fff; color: #0A1628; }
+
+  .ov__body {
+    flex: 1;
+    display: grid;
+    gap: clamp(2.5rem, 5vw, 4rem);
+    padding-top: clamp(2.5rem, 5vw, 4rem);
+  }
+  @media (min-width: 900px) {
+    .ov__body { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+  }
+
+  .ov__primary { list-style: none; margin: 0; padding: 0; }
+  .ov__primary li + li { border-top: 1px solid #22344A; }
+  .ov__primary a {
+    display: block;
+    padding: clamp(0.75rem, 1.6vw, 1.15rem) 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.75rem, 4vw, 3rem);
+    line-height: var(--lh-h2);
+    color: #fff;
+    text-decoration: none;
+  }
+  .ov__primary a:hover { color: #E0C08A; }
+  .ov__primary a[aria-current="page"] { color: #E0C08A; }
+
+  .ov__head {
+    margin: 0 0 1rem;
+    font-size: var(--text-caption);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #7E93A3;
+  }
+  .ov__head--wa { margin-top: 2.5rem; }
+
+  .ov__secondary,
+  .ov__wa { list-style: none; margin: 0; padding: 0; }
+  .ov__secondary a,
+  .ov__wa a {
+    display: block;
+    min-height: 44px;
+    padding: 0.6rem 0;
+    color: #fff;
+    text-decoration: none;
+    font-size: var(--text-body);
+  }
+  .ov__secondary a:hover,
+  .ov__wa a:hover { color: #00B4D8; }
+  .ov__wa a { font-variant-numeric: tabular-nums; }
+
+  .ov__cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-top: 1.5rem;
+    padding: 0.75rem 1.75rem;
+    background: #00B4D8;
+    color: #06232B;
+    border-radius: 0;
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  @media (max-width: 559px) {
+    .ov__close-text { display: none; }
+  }
+</style>
+
+<script>
+  const overlay = document.getElementById("menu-overlay");
+  const openBtn = document.getElementById("menu-open");
+  const closeBtn = document.getElementById("menu-close");
+
+  if (overlay && openBtn && closeBtn) {
+    const main = document.getElementById("main");
+    const footer = document.querySelector("footer");
+    const FOCUSABLE =
+      'a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])';
+
+    function trap(e: KeyboardEvent) {
+      if (e.key === "Escape") { close(); return; }
+      if (e.key !== "Tab") return;
+      const items = overlay!.querySelectorAll<HTMLElement>(FOCUSABLE);
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+
+    function open() {
+      overlay!.hidden = false;
+      openBtn!.setAttribute("aria-expanded", "true");
+      // The page behind is removed from the tab order AND the a11y tree.
+      main?.setAttribute("inert", "");
+      footer?.setAttribute("inert", "");
+      document.body.style.overflow = "hidden";
+      closeBtn!.focus();
+      document.addEventListener("keydown", trap);
+    }
+
+    function close() {
+      overlay!.hidden = true;
+      openBtn!.setAttribute("aria-expanded", "false");
+      main?.removeAttribute("inert");
+      footer?.removeAttribute("inert");
+      document.body.style.overflow = "";
+      openBtn!.focus();          // focus goes back where it came from
+      document.removeEventListener("keydown", trap);
+    }
+
+    openBtn.addEventListener("click", open);
+    closeBtn.addEventListener("click", close);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+  }
+</script>

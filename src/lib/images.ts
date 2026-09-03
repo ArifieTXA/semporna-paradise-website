@@ -57,6 +57,24 @@ export const IMAGES = {
   "photo-heart-sandbar":{ widths: [480, 810], w: 810, h: 1080 },
   "photo-group-sign":   { widths: [480, 810], w: 810, h: 1080 },
   "photo-boat-thumbs":  { widths: [480, 608], w: 608, h: 1080 },
+
+  /* ---- Free-licence Wikimedia Commons stills (harvested 2026-09-04) ----
+     Every one of these is CC0, CC BY or CC BY-SA and is attributed in the
+     footer through src/data/photo-credits.ts. CC BY and CC BY-SA REQUIRE that.
+     Harvest and licence vetting: scripts/harvest-commons.py. ------------- */
+  "cm-semporna-dusk": { widths: [480, 960, 1280, 1920], w: 1920, h: 784 },
+  "cm-stilt-lagoon": { widths: [480, 960, 1280, 1920], w: 1920, h: 1080 },
+  "cm-reef-mosaic": { widths: [480, 960, 1280, 1920], w: 1920, h: 1920 },
+  "cm-stilt-village": { widths: [480, 960, 1280, 1920], w: 1920, h: 1080 },
+  "cm-semporna-town": { widths: [480, 960, 1280, 1920], w: 1920, h: 1280 },
+  "cm-white-beach": { widths: [480, 960, 1280, 1920], w: 1920, h: 1272 },
+  "cm-sipadan-wall": { widths: [480, 960, 1280, 1920], w: 1920, h: 1280 },
+  "cm-turtle": { widths: [480, 960, 1280, 1920], w: 1920, h: 1152 },
+  "cm-jackfish": { widths: [480, 960, 1280, 1920], w: 1920, h: 1157 },
+  "cm-reef-shark": { widths: [480, 960, 1280, 1920], w: 1920, h: 1280 },
+  "cm-reef-fish": { widths: [480, 960, 1280, 1920], w: 1920, h: 1440 },
+  "cm-wrasse": { widths: [480, 960, 1280, 1920], w: 1920, h: 1535 },
+  "cm-bubble-coral": { widths: [480, 960, 1280, 1920], w: 1920, h: 1152 },
 } as const satisfies Record<string, ImageMeta>;
 
 export type ImageSlot = keyof typeof IMAGES;

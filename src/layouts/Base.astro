@@ -20,19 +20,30 @@ interface Props {
   /** Which surface dominates this page. Drives the depth ramp. */
   depth?: "surface" | "shallow" | "reef" | "deep" | "abyss";
   ogImage?: string;
+  /**
+   * The scroll theme this page OPENS on, before any section has crossed
+   * mid-viewport. src/lib/scroll-theme.ts takes over from there. A page whose
+   * first section is dark must pass "2", or the header paints dark text on a
+   * dark hero for one frame.
+   */
+  theme?: "1" | "2" | "3";
+  /** Preload the hero poster + first video source. Home page only. */
+  heroVideo?: boolean;
 }
 
 // Fails the build if any route lost its language twin (defect #11).
 assertParity();
 
 const { route, path, twinPath, lang, title, description, ogImage } = Astro.props;
+const theme = Astro.props.theme ?? "1";
+const heroVideo = Astro.props.heroVideo ?? false;
 const depth = Astro.props.depth ?? (route ? ROUTES[route].depth : "surface");
 const htmlLang = lang === "bm" ? "ms-MY" : "en-MY";
 const skipLabel = lang === "bm" ? "Terus ke kandungan utama" : "Skip to main content";
 ---
 
 <!doctype html>
-<html lang={htmlLang} data-depth={depth}>
+<html lang={htmlLang} data-depth={depth} data-theme={theme}>
   <head>
     <SEOHead
       route={route}
@@ -43,8 +54,16 @@ const skipLabel = lang === "bm" ? "Terus ke kandungan utama" : "Skip to main con
       description={description}
       ogImage={ogImage}
     />
+    {heroVideo && (
+      <>
+        <link rel="preload" as="image" href="/video/hero-poster.jpg" fetchpriority="high" />
+        <link rel="preload" as="image" href="/brand/fish-mark.png" />
+      </>
+    )}
     <noscript>
-      <style>[data-reveal]{opacity:1 !important;transform:none !important;}</style>
+      <style>
+        [data-reveal],[data-reveal-words]{opacity:1 !important;transform:none !important;}
+      </style>
     </noscript>
   </head>
 
@@ -78,6 +97,105 @@ const skipLabel = lang === "bm" ? "Terus ke kandungan utama" : "Skip to main con
       /* Section padding floor is 48px. Never lower — it breaks the pacing. */
       .section { padding-block: clamp(3rem, 8vw, 5rem); }
       .section--tall { padding-block: clamp(4rem, 11vw, 7.5rem); }
+
+      /* ---- BelArosa rhythm (home page, 2026-09-04) -----------------------
+         The reference pads its sections 240px top and bottom at 1920px. A flat
+         240 would eat two thirds of a 390px screen, so --sec-pad clamps it
+         (theme.css). `.band` is the container the home page uses; the older
+         `.section` rules above are left alone for the other 25 pages. */
+      .band { padding-block: var(--sec-pad); }
+      .band--tight { padding-block: var(--sec-pad-tight); }
+
+      /* The reference lets images run past the container to the viewport edge.
+         `.bleed-r` / `.bleed-l` are that: full width on the outside, aligned to
+         the text column on the inside. */
+      .rail {
+        width: 100%;
+        max-width: 90rem;
+        margin-inline: auto;
+        padding-inline: clamp(1.5rem, 4vw, 4rem);
+      }
+
+      .split {
+        display: grid;
+        gap: clamp(2.5rem, 6vw, 6rem);
+        align-items: center;
+      }
+      @media (min-width: 900px) {
+        .split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+        .split--text-first > :first-child { grid-column: 1; }
+      }
+
+      /* ---- Editorial type, exact reference values --------------------- */
+      .eyebrow-b {
+        margin: 0 0 clamp(1.5rem, 3vw, 2.5rem);
+        font-family: var(--font-body);
+        font-size: var(--text-caption);
+        font-weight: 400;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--s-muted, var(--t-muted));
+      }
+
+      .title-b {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: clamp(2rem, 4.6vw, 3rem);      /* 32 -> 48 */
+        line-height: var(--lh-h2);
+        max-width: 22ch;
+        margin: 0;
+      }
+      .title-b--lg {
+        font-size: clamp(2.25rem, 5.6vw, 4rem);   /* 36 -> 64 */
+        line-height: var(--lh-h1);               /* 64/70.4, as measured */
+        max-width: 20ch;
+      }
+      .title-b--center { margin-inline: auto; text-align: center; }
+
+      .sub-b {
+        font-family: var(--font-body);
+        font-weight: 400;
+        font-size: var(--text-heading);           /* 28 */
+        line-height: var(--lh-h3);
+        max-width: 30ch;
+        margin: 0;
+      }
+
+      .lead-b {
+        margin: clamp(1.5rem, 3vw, 2rem) 0 0;
+        font-size: var(--text-lead);              /* 20 / 30 */
+        line-height: var(--lh-lead);
+        max-width: 54ch;
+        color: var(--s-muted, var(--t-muted));
+      }
+      .lead-b--center { margin-inline: auto; text-align: center; }
+
+      /* ---- The button. Transparent with a hairline underline, never a pill.
+         The reference has no filled buttons at all; WhatsAppCTA keeps its one
+         documented deviation for the single conversion action. ------------ */
+      .link-b {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 0.75rem 0.125rem;
+        border: 0;
+        border-bottom: 1px solid currentColor;
+        border-radius: 0;
+        color: inherit;
+        text-decoration: none;
+        font-size: var(--text-caption);
+        font-weight: 400;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        transition: color var(--dur-micro) var(--ease-micro);
+      }
+      .link-b:hover { color: var(--s-accent, var(--t-accent)); }
+
+      .rule-b {
+        border: 0;
+        border-top: 1px solid var(--s-rule, var(--t-rule));
+        margin: 0;
+      }
 
       /* ---- The two-tone oscillation. Hard cuts, never gradients. ---- */
       [data-surface="light"] { background: var(--color-snow);      color: var(--color-ink); }

@@ -1,0 +1,104 @@
+---
+/**
+ * <VideoTile> — one silent looping reel, sharp-cornered, poster-first.
+ *
+ * The clip is company-owned footage from @sem4naparadise (CONTEXT.md §5, owner
+ * override 2026-09-03). Provenance for every file: img-raw/SOURCES.md.
+ *
+ * Nothing is fetched in markup. `src/lib/motion.ts -> initVideoTiles()`
+ * attaches <source> elements only when the tile enters the viewport, and never
+ * at all under `prefers-reduced-motion` or on a Save-Data / 2g connection —
+ * those visitors keep the .webp poster, which is a still frame of the same cut.
+ * A page with 24 tiles therefore downloads four videos, not twenty-four.
+ *
+ * The video is decorative: the label beside it carries the meaning, so the
+ * <video> is aria-hidden and out of the tab order. There is no pause control
+ * because under reduce the loop never starts (WCAG 2.2.2 is met by not
+ * autoplaying, which is the stronger reading of it).
+ */
+import type { Tile } from "../data/tiles";
+import type { Lang } from "../lib/gated";
+
+interface Props {
+  tile: Tile;
+  lang: Lang;
+  /** Show the label under the frame. Off inside a dense grid. */
+  showLabel?: boolean;
+  class?: string;
+  /** Crop box. Defaults to the reel's native 9:16. */
+  ratio?: string;
+}
+
+const { tile, lang, showLabel = true, class: className = "", ratio = "9 / 16" } =
+  Astro.props;
+
+const base = `/video/tiles/${tile.id}`;
+---
+
+<figure class:list={["tile", className]}>
+  <div class="tile__frame" style={`aspect-ratio:${ratio}`}>
+    <video
+      class="tile__v"
+      data-tile
+      data-webm={`${base}.webm`}
+      data-mp4={`${base}.mp4`}
+      poster={`${base}.webp`}
+      width={tile.w}
+      height={tile.h}
+      muted
+      loop
+      playsinline
+      preload="none"
+      tabindex="-1"
+      aria-hidden="true"></video>
+    {/* The still that a reduced-motion visitor keeps. It carries the alt text,
+        so the frame is described whether or not the loop ever plays. */}
+    <img class="tile__poster" src={`${base}.webp`} alt={tile.alt[lang]}
+         width={tile.w} height={tile.h} loading="lazy" decoding="async" />
+  </div>
+  {/* A tile whose subject is just "the sea around Semporna" carries no label:
+      repeating one generic phrase down a whole strip tells the reader nothing,
+      and inventing a more specific one would be inventing a fact. */}
+  {showLabel && tile.label && (
+    <figcaption class="tile__label">{tile.label[lang]}</figcaption>
+  )}
+</figure>
+
+<style>
+  .tile {
+    margin: 0;
+    min-width: 0;
+  }
+
+  .tile__frame {
+    position: relative;
+    overflow: hidden;
+    background: var(--s-rule, var(--t-rule));
+    border-radius: 0; /* sharp corners everywhere — theme.css §Radius */
+  }
+
+  .tile__v,
+  .tile__poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* The poster sits UNDER the video. Once the loop plays it is simply covered,
+     so there is no swap, no flash and no layout move. */
+  .tile__poster { z-index: 0; }
+  .tile__v      { z-index: 1; background: transparent; }
+
+  .tile__label {
+    margin-top: 0.875rem;
+    font-family: var(--font-body);
+    font-size: var(--text-caption);
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--s-muted, var(--t-muted));
+  }
+</style>

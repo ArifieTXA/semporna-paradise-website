@@ -1,0 +1,258 @@
+---
+/**
+ * <HeroVideo> — the full-screen opening, motion inventory #4.
+ *
+ * The footage is the owner's own hero master (`Videos/hero-1080.webm`, VP9,
+ * silent, 1920x1080), with an H.264 twin transcoded for iPhone. Both are
+ * company-owned; provenance is in img-raw/SOURCES.md. This is real footage, so
+ * it carries no "generated visual" credit — that line belonged to the KIE plate
+ * it replaces and would now be false.
+ *
+ * Source order is webm then mp4: Safari ignores the VP9 file and takes the
+ * second, every other browser takes the first. Both are listed in MARKUP here
+ * rather than attached by script, because this is the one video on the page
+ * that is the page — a hero that needs JS to appear is a hero that flashes.
+ * The poster is the video's own first frame, so nothing pops on load.
+ *
+ * ── Reduced motion ───────────────────────────────────────────────────────
+ * `autoplay` is NOT in the markup. src/lib/motion.ts starts the loop, and only
+ * when reduce is off and the connection is not thrifty. A reduce visitor sees
+ * the poster, full bleed, and the page reads identically — the video is
+ * atmosphere, never information.
+ *
+ * ── WCAG 2.2.2 ───────────────────────────────────────────────────────────
+ * The loop runs longer than five seconds, so a real pause control sits in the
+ * hero, keyboard reachable, with its label swapping between play and pause.
+ */
+import type { Lang } from "../lib/gated";
+
+interface Props {
+  lang: Lang;
+  eyebrow: string;
+  /** The h1 text. Split word-by-word at runtime — see <Reveal>. */
+  heading: string;
+  lead?: string;
+  scrollLabel: string;
+  playLabel: string;
+  pauseLabel: string;
+}
+
+const { lang, eyebrow, heading, lead, scrollLabel, playLabel, pauseLabel } =
+  Astro.props;
+---
+
+<section class="hero" data-theme-section="2" aria-label={eyebrow}>
+  <div class="hero__media" aria-hidden="true">
+    <video
+      class="hero__v"
+      id="hero-video"
+      poster="/video/hero-poster.jpg"
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      tabindex="-1"
+    >
+      <source src="/video/hero-1080.webm" type="video/webm" />
+      <source src="/video/hero-1080.mp4" type="video/mp4" />
+    </video>
+    <div class="hero__scrim"></div>
+  </div>
+
+  <div class="hero__inner">
+    <p class="hero__eyebrow">{eyebrow}</p>
+    <h1 class="rv hero__title" data-reveal-words>{heading}</h1>
+    {lead && <p class="hero__lead">{lead}</p>}
+  </div>
+
+  <a class="hero__scroll" href="#after-hero">
+    <span class="hero__scroll-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="14" height="14" focusable="false" aria-hidden="true">
+        <path d="M12 4v14M6 13l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.5" />
+      </svg>
+    </span>
+    <span class="hero__scroll-text">{scrollLabel}</span>
+  </a>
+
+  <button
+    class="hero__motion"
+    id="hero-motion"
+    type="button"
+    hidden
+    data-play={playLabel}
+    data-pause={pauseLabel}
+    aria-label={pauseLabel}
+  >
+    <svg class="hero__ico hero__ico--pause" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <rect x="4" y="3" width="2.5" height="10" fill="currentColor" />
+      <rect x="9.5" y="3" width="2.5" height="10" fill="currentColor" />
+    </svg>
+    <svg class="hero__ico hero__ico--play" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M5 3l8 5-8 5z" fill="currentColor" />
+    </svg>
+  </button>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: #fff;
+    isolation: isolate;
+  }
+
+  .hero__media { position: absolute; inset: 0; z-index: -1; }
+
+  .hero__v {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* The reference darkens the top of its hero so the white header stays legible
+     against a bright sky. Same gradient, same 81% stop, plus a floor so the
+     centred h1 always clears 4.5:1 on any frame of the loop. */
+  .hero__scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(rgba(10, 22, 40, 0.5), rgba(10, 22, 40, 0) 81%),
+      rgba(10, 22, 40, 0.34);
+  }
+
+  .hero__inner {
+    width: 100%;
+    max-width: 60rem;
+    padding-inline: 1.5rem;
+    text-align: center;
+  }
+
+  .hero__eyebrow {
+    margin: 0 0 1.75rem;
+    font-size: var(--text-caption);
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  .hero__title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.5rem, 6.2vw, 4rem);   /* 40 -> 64 */
+    line-height: var(--lh-h1);
+    margin: 0;
+    color: #fff;
+  }
+
+  .hero__lead {
+    margin: 2rem auto 0;
+    max-width: 46ch;
+    font-size: var(--text-lead);
+    line-height: var(--lh-lead);
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  /* ---- Scroll cue: gold diamond + tracked label, bottom left ---- */
+  .hero__scroll {
+    position: absolute;
+    left: clamp(1.5rem, 3vw, 3.5rem);
+    bottom: clamp(1.5rem, 3vw, 3rem);
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 44px;
+    padding: 0.5rem 0.25rem;
+    text-decoration: none;
+    color: #fff;
+    font-size: var(--text-caption);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .hero__scroll-mark {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--t-accent, #E0C08A);
+    color: var(--t-accent, #E0C08A);
+    transform: rotate(45deg);
+  }
+  .hero__scroll-mark svg { transform: rotate(-45deg); }
+
+  .hero__scroll:hover .hero__scroll-mark { background: rgba(224, 192, 138, 0.16); }
+
+  /* ---- Pause control ---- */
+  .hero__motion {
+    position: absolute;
+    right: clamp(1.5rem, 3vw, 3.5rem);
+    bottom: clamp(1.5rem, 3vw, 3rem);
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    background: rgba(10, 22, 40, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 0;
+    color: #fff;
+    cursor: pointer;
+  }
+  .hero__motion:hover { background: rgba(10, 22, 40, 0.75); }
+  .hero__ico { width: 14px; height: 14px; }
+  .hero__ico--play { display: none; }
+  .hero__motion[data-paused] .hero__ico--pause { display: none; }
+  .hero__motion[data-paused] .hero__ico--play { display: block; }
+
+  @media (max-width: 559px) {
+    .hero__scroll-text { display: none; }
+  }
+</style>
+
+<script>
+  /**
+   * The hero loop. `autoplay` is deliberately absent from the markup so that a
+   * reduced-motion or Save-Data visitor never starts it — they keep the poster,
+   * which is the video's own first frame.
+   */
+  const video = document.getElementById("hero-video") as HTMLVideoElement | null;
+  const toggle = document.getElementById("hero-motion") as HTMLButtonElement | null;
+
+  if (video && toggle) {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const conn = (navigator as any).connection;
+    const thrifty = Boolean(conn?.saveData) || /(^|-)2g$/.test(conn?.effectiveType ?? "");
+
+    function setState(playing: boolean) {
+      toggle!.toggleAttribute("data-paused", !playing);
+      toggle!.setAttribute("aria-label", playing ? toggle!.dataset.pause! : toggle!.dataset.play!);
+    }
+
+    if (!reduce && !thrifty) {
+      video
+        .play()
+        .then(() => {
+          toggle.hidden = false;
+          setState(true);
+        })
+        .catch(() => {
+          /* Autoplay refused. The poster is the page; no control is needed. */
+        });
+    }
+
+    toggle.addEventListener("click", () => {
+      if (video.paused) {
+        void video.play();
+        setState(true);
+      } else {
+        video.pause();
+        setState(false);
+      }
+    });
+  }
+</script>

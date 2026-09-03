@@ -15,6 +15,7 @@
  * atmosphere, not evidence.
  */
 import Img from "./Img.astro";
+import DragGallery from "./DragGallery.astro";
 import type { ImageSlot } from "../lib/images";
 import type { Lang } from "../lib/gated";
 
@@ -34,6 +35,20 @@ interface Props {
   eyebrow?: string;
   title?: string;
   lead?: string;
+  /**
+   * Scroll theme this band declares (src/lib/scroll-theme.ts). Optional so the
+   * 25 pages that have not been rebuilt yet keep working unchanged.
+   */
+  theme?: "1" | "2" | "3";
+  /**
+   * "drag" puts the same photos in the horizontal drag slider instead of a
+   * three-up grid. The permission label and the captions are identical either
+   * way — CONTEXT.md §5 requires that these frames never render outside this
+   * component, and a layout switch is not an exit from it.
+   */
+  layout?: "grid" | "drag";
+  /** Region label for the drag layout's scroller. */
+  id?: string;
 }
 
 const {
@@ -43,6 +58,9 @@ const {
   eyebrow,
   title,
   lead,
+  theme,
+  layout = "grid",
+  id = "guest-gallery",
 } = Astro.props;
 
 const t = {
@@ -65,32 +83,56 @@ const eye = eyebrow ?? t.eyebrow;
 const sub = lead ?? t.lead;
 ---
 
-<section class="section--tall gallery" data-surface={surface} data-reveal>
+<section class:list={["gallery", theme ? "band" : "section--tall"]} data-surface={surface} data-theme-section={theme} data-reveal>
   <div class="wrap">
     <div class="gallery__head">
-      <p class="eyebrow eyebrow--center">{eye}</p>
-      <h2 class="sec__title sec__title--center">{heading}</h2>
-      <p class="sec__lead sec__lead--center">{sub}</p>
+      <p class:list={[theme ? "eyebrow-b" : "eyebrow eyebrow--center", theme && "gallery__eyebrow"]}>{eye}</p>
+      {theme
+        ? <h2 class="rv title-b title-b--center" data-reveal-words>{heading}</h2>
+        : <h2 class="sec__title sec__title--center">{heading}</h2>}
+      <p class:list={[theme ? "lead-b lead-b--center" : "sec__lead sec__lead--center"]}>{sub}</p>
     </div>
 
-    <ul class="gallery__row" role="list">
-      {items.map((it) => (
-        <li class="gallery__item">
-          <figure class="gallery__fig">
+    {layout === "grid" && (
+      <ul class="gallery__row" role="list">
+        {items.map((it) => (
+          <li class="gallery__item">
+            <figure class="gallery__fig">
+              <Img
+                slot={it.slot}
+                alt={it.alt}
+                sizes="(min-width: 960px) 30vw, (min-width: 600px) 45vw, 90vw"
+                class="gallery__img"
+              />
+              <figcaption class="gallery__cap">{it.caption}</figcaption>
+            </figure>
+          </li>
+        ))}
+      </ul>
+    )}
+
+    {layout === "grid" && <p class="gallery__note">{t.note}</p>}
+  </div>
+
+  {layout === "drag" && (
+    <div class="gallery__drag">
+      <DragGallery lang={lang} id={id} label={heading}>
+        {items.map((it) => (
+          <figure class="gallery__fig gallery__fig--slide">
             <Img
               slot={it.slot}
               alt={it.alt}
-              sizes="(min-width: 960px) 30vw, (min-width: 600px) 45vw, 90vw"
+              sizes="(min-width: 900px) 26vw, 72vw"
               class="gallery__img"
+              ratio="3 / 4"
             />
             <figcaption class="gallery__cap">{it.caption}</figcaption>
           </figure>
-        </li>
-      ))}
-    </ul>
-
-    <p class="gallery__note">{t.note}</p>
-  </div>
+        ))}
+      </DragGallery>
+      <p class="gallery__note gallery__note--drag">{t.note}</p>
+    </div>
+  )}
 </section>
 
 <style>
@@ -156,5 +198,32 @@ const sub = lead ?? t.lead;
   [data-surface="dark"] .gallery__note,
   [data-surface="mid"] .gallery__note {
     color: var(--color-paper-muted);
+  }
+
+  /* ---- BelArosa restyle, 2026-09-04 -----------------------------------
+     Sharp corners, hairline rules, tracked uppercase captions. Applied only
+     inside a band that declares a scroll theme, so the 25 pages still on the
+     old surface system render exactly as before. ---------------------- */
+  [data-theme-section] .gallery__img,
+  [data-theme-section] .gallery__img :global(img) { border-radius: 0; }
+
+  [data-theme-section] .gallery__cap {
+    margin-top: 0.875rem;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--s-rule, var(--t-rule));
+    font-size: var(--text-caption);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--s-muted, var(--t-muted));
+  }
+
+  .gallery__eyebrow { text-align: center; justify-content: center; }
+
+  .gallery__drag { margin-top: clamp(2.5rem, 5vw, 4rem); }
+  .gallery__fig--slide { margin: 0; }
+
+  .gallery__note--drag {
+    margin: 2rem 0 0;
+    padding-inline: clamp(1.5rem, 4vw, 4rem);
   }
 </style>

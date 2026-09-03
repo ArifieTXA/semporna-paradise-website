@@ -12,6 +12,7 @@
  */
 import { href, title, type Lang } from "../lib/routes";
 import { COMPANY, WHATSAPP, SOCIAL, HOURS } from "../data/config";
+import { PHOTO_CREDITS } from "../data/photo-credits";
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -25,6 +26,9 @@ const t = {
     follow: "Ikuti kami",
     noEmail: "Semua pertanyaan melalui WhatsApp.",
     rights: "Hak cipta terpelihara.",
+    credits: "Kredit foto",
+    creditsNote:
+      "Foto berikut digunakan di bawah lesen bebas Wikimedia Commons. Semua video dan foto perjalanan yang lain adalah hak milik syarikat.",
   },
   en: {
     contact: "Contact us",
@@ -34,6 +38,9 @@ const t = {
     follow: "Follow us",
     noEmail: "All enquiries go through WhatsApp.",
     rights: "All rights reserved.",
+    credits: "Photo credits",
+    creditsNote:
+      "The photographs below are used under free Wikimedia Commons licences. Every other video and trip photograph on this site belongs to the company.",
   },
 }[lang];
 
@@ -94,6 +101,20 @@ const year = new Date().getFullYear();
     </div>
   </div>
 
+  <div class="wrap ftr__credits">
+    <h2 class="ftr__head">{t.credits}</h2>
+    <p class="ftr__note">{t.creditsNote}</p>
+    <ul class="ftr__creditlist">
+      {PHOTO_CREDITS.map((cr) => (
+        <li>
+          <a href={cr.sourcePage} target="_blank" rel="noopener noreferrer">{cr.title}</a>
+          <span class="ftr__by"> — {cr.author}, </span>
+          <a href={cr.licenceUrl} target="_blank" rel="noopener noreferrer">{cr.licence}</a>
+        </li>
+      ))}
+    </ul>
+  </div>
+
   <div class="wrap ftr__base">
     <p>&copy; {year} {COMPANY.legalName}. {t.rights}</p>
     <p class="ftr__tagline">{COMPANY.tagline}</p>
@@ -101,6 +122,29 @@ const year = new Date().getFullYear();
 </footer>
 
 <style>
+  /* ---- Photo credits. Required by CC BY and CC BY-SA, so this block is not
+     optional and is not collapsible. Set small and quiet, never hidden. ---- */
+  .ftr__credits {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    padding-top: clamp(2rem, 4vw, 3rem);
+    border-top: 1px solid var(--color-rule-dark);
+  }
+  .ftr__creditlist {
+    list-style: none;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.55;
+    color: var(--color-paper-muted);
+  }
+  @media (min-width: 760px)  { .ftr__creditlist { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 2.5rem; } }
+  @media (min-width: 1200px) { .ftr__creditlist { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .ftr__creditlist a { color: var(--color-paper); text-decoration: underline; text-underline-offset: 2px; }
+  .ftr__creditlist a:hover { color: var(--color-gold-soft); }
+  .ftr__by { color: var(--color-paper-muted); }
+
   .ftr {
     background: var(--color-deep);
     color: var(--color-paper);

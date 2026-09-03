@@ -13,3 +13,23 @@ node_modules/
 
 # raw working images (not needed for build)
 img-raw/
+
+.vercel
+.env*
+
+# ---- Source media, 2026-09-04 -------------------------------------------
+# The owner's raw supply. 615 MB of Instagram reels + the hero master, and
+# 98 MB of downloaded photos. `scripts/build-tiles.mjs` turns the reels into
+# the 17 MB of tiles under public/video/tiles/, which IS committed — the raw
+# input is not, and never belongs in git.
+Videos/
+ig-photos/
+
+# scratch output of the asset scripts
+scripts/reels.tsv
+scripts/commons-sheet.png
+
+# img-raw/ is ignored above, but SOURCES.md is the provenance manifest that
+# makes the 2026-09-03 owner media override auditable (CONTEXT.md §5). It is
+# tracked on purpose. Do not remove this exception.
+!img-raw/SOURCES.md

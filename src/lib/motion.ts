@@ -8,6 +8,9 @@
  * ONE smooth-scroll engine: Lenis. Never Locomotive as well. audit.py asserts it.
  */
 
+import { initWordReveals } from "./reveal";
+import { initScrollTheme } from "./scroll-theme";
+
 const REDUCE_QUERY = "(prefers-reduced-motion: reduce)";
 
 export function prefersReduced(): boolean {
@@ -107,9 +110,71 @@ export function initNavEdge(): void {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Reel tiles — silent loops that only run while they are on screen            */
+/*                                                                            */
+/* A page can carry two dozen of these. Autoplaying all of them at once would  */
+/* decode two dozen video streams for the sake of four the visitor can see, so */
+/* each one starts when it enters the viewport and pauses when it leaves.      */
+/*                                                                            */
+/* Under reduce, and on a Save-Data or 2g connection, no <source> is ever      */
+/* attached: the tile stays its poster image, which is a still frame of the    */
+/* same clip. Nothing is hidden and no layout changes — WCAG 2.2.2 is met by   */
+/* never starting the loop rather than by offering a pause button.             */
+/* -------------------------------------------------------------------------- */
+
+function thrifty(): boolean {
+  const c = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } })
+    .connection;
+  return Boolean(c?.saveData) || /(^|-)2g$/.test(c?.effectiveType ?? "");
+}
+
+export function initVideoTiles(): void {
+  const tiles = document.querySelectorAll<HTMLVideoElement>("video[data-tile]");
+  if (!tiles.length) return;
+
+  if (prefersReduced() || thrifty()) return; // posters only. Never downloaded.
+
+  const attach = (v: HTMLVideoElement) => {
+    if (v.dataset.loaded) return;
+    for (const [type, key] of [["video/webm", "webm"], ["video/mp4", "mp4"]] as const) {
+      const src = v.dataset[key];
+      if (!src) continue;
+      const s = document.createElement("source");
+      s.type = type;
+      s.src = src;
+      v.append(s);
+    }
+    v.dataset.loaded = "1";
+    v.load();
+  };
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const v = entry.target as HTMLVideoElement;
+        if (entry.isIntersecting) {
+          attach(v);
+          void v.play().catch(() => {/* autoplay refused: the poster stands in */});
+        } else if (!v.paused) {
+          v.pause();
+        }
+      }
+    },
+    { rootMargin: "200px 0px", threshold: 0.15 },
+  );
+
+  tiles.forEach((v) => io.observe(v));
+}
+
+/* -------------------------------------------------------------------------- */
 
 export function initMotion(): void {
+  // Order matters: the theme is settled before anything animates, so a heading
+  // never reveals in the colour of the section it is leaving.
+  initScrollTheme();
+  initWordReveals();
   initReveals();
   initNavEdge();
+  initVideoTiles();
   void initSmoothScroll();
 }

@@ -6,6 +6,10 @@
 @import "@fontsource/montserrat/500.css";
 @import "@fontsource/montserrat/600.css";
 
+/* The three scroll themes. Must come AFTER tailwind so its reset cannot
+   overwrite the html/body background these set. */
+@import "./themes.css";
+
 /* ==========================================================================
    Semporna Paradise v2 — design tokens
    "Dusk on alpine vellum", re-tuned for the Celebes Sea.
@@ -57,16 +61,25 @@
   --font-display: "Cormorant Garamond", "Playfair Display", Georgia, "Times New Roman", serif;
   --font-body:    "Montserrat", ui-sans-serif, system-ui, sans-serif;
 
-  /* Minor Third 1.2 from 16px — 9 levels */
-  --text-caption:     0.75rem;   /* 12 — eyebrows, labels. 0.14–0.17em tracking */
+  /* The reference scale, read out of the rendered DOM at 1920px, not guessed:
+     16 / 20 / 24 / 28 / 48 / 64, with 12 and 14 for labels. Line-heights are
+     the measured ones: h1 1.1, h2 1.2, h3 1.4, lead 1.5, body 1.5. */
+  --text-caption:     0.75rem;   /* 12 — eyebrow, nav, button. 2px tracking */
   --text-body-sm:     0.875rem;  /* 14 */
-  --text-body:        1rem;      /* 16 */
-  --text-subheading:  1.25rem;   /* 20 */
+  --text-body:        1rem;      /* 16 / 24 */
+  --text-lead:        1.25rem;   /* 20 / 30 */
+  --text-subheading:  1.25rem;   /* 20 — kept: old name, same value */
   --text-heading-sm:  1.5rem;    /* 24 */
-  --text-heading:     1.75rem;   /* 28 — serif starts here */
+  --text-heading:     1.75rem;   /* 28 / 39.2 — h3, sans 400 */
   --text-heading-lg:  2.5rem;    /* 40 */
-  --text-display:     3rem;      /* 48 */
-  --text-display-lg:  4rem;      /* 64 */
+  --text-display:     3rem;      /* 48 / 57.6 — h2, serif 600 */
+  --text-display-lg:  4rem;      /* 64 / 70.4 — h1, serif 600 */
+
+  --lh-h1:   1.1;
+  --lh-h2:   1.2;
+  --lh-h3:   1.4;
+  --lh-lead: 1.5;
+  --lh-body: 1.5;
 
   /* ---- Spacing: 8px base ---- */
   --spacing-s1:   0.5rem;   /* 8   */
@@ -78,11 +91,22 @@
   --spacing-s7:   5rem;     /* 80  */
   --spacing-s8:   7.5rem;   /* 120 */
   --spacing-s9:   10rem;    /* 160 */
-  --spacing-s10:  15rem;    /* 240 */
+  --spacing-s10:  15rem;    /* 240 — the reference section padding at 1920 */
 
-  /* ---- Radius ---- */
-  --radius-pill:  80px;     /* buttons, badges, nav pills — the signature shape */
-  --radius-card:  12px;
+  /* Section rhythm. 240px top and bottom at 1920px, fluid to ~96px at 390px.
+     The reference uses a flat 240; a flat 240 at 390px wastes two thirds of a
+     phone screen, so it is clamped instead. */
+  --sec-pad:      clamp(6rem, 12.5vw, 15rem);
+  --sec-pad-tight: clamp(4rem, 8vw, 10rem);
+
+  /* ---- Radius ----
+     ZERO, everywhere. Measured off the reference: 1091 elements at 0px against
+     8 at 80px (its language dropdown) and 3 at 12px. Sharp corners on images,
+     buttons and cards are the largest single difference from the rounded-card
+     site this replaces. The two tokens stay so nothing has to be renamed, but
+     both now resolve to 0. */
+  --radius-pill:  0px;
+  --radius-card:  0px;
 
   /* ---- Motion ---- */
   --ease-water:  cubic-bezier(0.22, 1, 0.36, 1);
@@ -102,36 +126,51 @@
      clear it — sticky table heads, :target scroll offsets — stays in step
      with the bar as it shrinks on scroll. motion.ts mirrors the nav state
      attributes onto <html> so these variants can switch it. */
-  --hdr-h: 8rem;                                /* bar + sub-links row */
+  /* Height of the floating header. Feeds the sticky price-table head's `top`
+     and every anchor's scroll-margin, so a jump target never lands behind it.
+     Measured on the rebuilt header (2026-09-04): the centred logo tile is the
+     tallest thing in the bar at ~104px, and it no longer shrinks on scroll —
+     the sub-links row it used to shrink away does not exist any more. */
+  --hdr-h: 9rem;   /* measured 139px on the rebuilt header; rounded up */
   color-scheme: light;
 }
-:root[data-nav-scrolled]  { --hdr-h: 7.5rem; } /* padding tightens past 40px */
-:root[data-nav-collapsed] { --hdr-h: 4.25rem; } /* sub-links row gone past 120px */
 
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
 }
 
+/* background and color are set by themes.css from the live scroll theme. */
 body {
   margin: 0;
-  background: var(--color-snow);
-  color: var(--color-ink);
   font-family: var(--font-body);
   font-size: var(--text-body);
-  line-height: 1.6;
-  letter-spacing: 0.01em;
+  line-height: var(--lh-body);
+  letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 /* Cormorant Garamond only at 28px and up — a serif moment signals importance.
    Montserrat below it does every job: nav, body, buttons, labels. */
-h1, h2, h3, .u-display {
+/* h1 and h2 are the serif moment. h3 is SANS at 400 on the reference — a
+   quiet 28px sub-line, not a small heading — so it is set that way here. */
+h1, h2, .u-display {
   font-family: var(--font-display);
-  font-weight: 500;
-  line-height: 1.15;
-  letter-spacing: 0.005em;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-wrap: balance;
+  margin: 0;
+}
+h1, .u-display { line-height: var(--lh-h1); }
+h2 { line-height: var(--lh-h2); }
+
+h3 {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--text-heading);
+  line-height: var(--lh-h3);
+  letter-spacing: 0;
   text-wrap: balance;
   margin: 0;
 }
@@ -158,9 +197,9 @@ img, svg, video { display: block; max-width: 100%; height: auto; }
    ========================================================================== */
 
 :focus-visible {
-  outline: 2px solid var(--color-deep);
+  outline: 2px solid var(--s-focus, var(--t-focus));
   outline-offset: 3px;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 [data-surface="dark"] :focus-visible,

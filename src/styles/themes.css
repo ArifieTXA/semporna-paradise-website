@@ -1,0 +1,137 @@
+/* ==========================================================================
+   themes.css — the three scroll themes.
+
+   This is the BelArosa signature move, measured out of the rendered DOM at
+   1920px (capture: ~/website-clones/belarosa-chalet/, 2026-09-04).
+
+   Every section carries `data-theme="1|2|3"`. As a section crosses mid-
+   viewport, src/lib/scroll-theme.ts writes that value onto <html>, and every
+   custom property below swaps at once — page background, body text, muted
+   text, hairlines, AND the fixed header, which is why the header text appears
+   to change colour as you scroll past a dark band. BelArosa does this with
+   GSAP ScrollTrigger `clamp(top 50%) / clamp(bottom 50%)`; we do it with one
+   IntersectionObserver at `rootMargin: -50% 0px -50% 0px`, which is the same
+   trip line for ~0 KB.
+
+   | Theme | BelArosa bg | BelArosa text | Semporna bg        | Semporna text |
+   |-------|-------------|---------------|--------------------|---------------|
+   | 1     | #ffffff     | #193741       | #ffffff            | #0A1628       |
+   | 2     | #193741     | #ffffff       | #0A1628 Ocean Deep | #ffffff       |
+   | 3     | #ebe7e1     | #193741       | #F1EBE0 sand       | #0A1628       |
+
+   ── Where we deliberately do NOT copy the reference ──────────────────────
+   BelArosa's muted grey is #8c9ba0, which measures 3.19:1 on white. That is
+   below the 4.5:1 body-text minimum and it fails on their site too. Copying a
+   contrast failure is not fidelity, it is a bug with a citation. So:
+
+     muted on light  #51687A   5.81:1 on white, 4.90:1 on sand
+     muted on dark   #7E93A3   5.69:1 on Ocean Deep   (the plan's value, kept
+                               where it actually passes)
+
+   Ocean Bright #00B4D8 measures 2.46:1 on white, so it is never link text or a
+   focus ring on a light theme. It is the link and focus colour on dark
+   (7.36:1) and a small accent elsewhere. Links on light take the body colour
+   with a hairline underline — which is what the reference does anyway.
+
+   Warm sand #E0C08A is decorative ONLY: hairlines, marks, the scroll cue. It
+   is never text and never a fill behind text. Brand yellow #FFD60A is kept for
+   tiny highlights; at large area it fights the luxury mood.
+   ========================================================================== */
+
+:root {
+  /* ---- Theme 1 · light. The default before any section has been seen. ---- */
+  --t-bg:            #FFFFFF;
+  --t-text:          #0A1628;
+  --t-muted:         #51687A;
+  --t-rule:          #E2DED6;  /* decorative hairline */
+  --t-border:        #0A1628;  /* meaningful border: outline buttons */
+  --t-accent:        #C9A464;  /* the sand, darkened for use on light */
+  --t-accent-ink:    #7A5C22;  /* the same accent when it has to BE text */
+  --t-link:          #0A1628;
+  --t-focus:         #0A1628;
+  --t-scrim:         rgba(10, 22, 40, 0.34);
+}
+
+/* --------------------------------------------------------------------------
+   Why there are two accents.
+
+   #C9A464 measures 2.3:1 on white. It is fine as a 1px rule or a diamond
+   outline, where the 3:1 non-text minimum applies, and wrong the moment it
+   carries a word — the step numerals in the trip shaper, for instance. So a
+   second token exists for that job: #7A5C22, 6.21:1 on white and 5.23:1 on
+   sand. On the dark theme the ordinary accent already measures 10.4:1, so
+   both tokens resolve to it there.
+   -------------------------------------------------------------------------- */
+
+/* ---- Theme 2 · dark. Ocean Deep. Hero, diving, the fullscreen teaser. ---- */
+:root[data-theme="2"] {
+  --t-bg:            #0A1628;
+  --t-text:          #FFFFFF;
+  --t-muted:         #7E93A3;
+  --t-rule:          #22344A;
+  --t-border:        #FFFFFF;
+  --t-accent:        #E0C08A;
+  --t-accent-ink:    #E0C08A;  /* 10.4:1 on Ocean Deep — already text-safe */
+  --t-link:          #00B4D8;
+  --t-focus:         #00B4D8;
+  --t-scrim:         rgba(10, 22, 40, 0.44);
+}
+
+/* ---- Theme 3 · sand. The warm band. Packages, gallery, master nav. ---- */
+:root[data-theme="3"] {
+  --t-bg:            #F1EBE0;
+  --t-text:          #0A1628;
+  --t-muted:         #51687A;
+  --t-rule:          #D9CFBD;
+  --t-border:        #0A1628;
+  --t-accent:        #B8914F;  /* sand-on-sand needs more depth to read */
+  --t-accent-ink:    #7A5C22;
+  --t-link:          #0A1628;
+  --t-focus:         #0A1628;
+  --t-scrim:         rgba(10, 22, 40, 0.34);
+}
+
+/* --------------------------------------------------------------------------
+   The transition. Only the page-level surfaces animate; text colour crossfades
+   with them so a heading never flashes an unreadable pair mid-swap.
+   700ms is measured off the reference's own theme change.
+   -------------------------------------------------------------------------- */
+
+html {
+  background: var(--t-bg);
+  transition: background-color 700ms var(--ease-water, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+body {
+  background: var(--t-bg);
+  color: var(--t-text);
+  transition:
+    background-color 700ms var(--ease-water, cubic-bezier(0.22, 1, 0.36, 1)),
+    color 700ms var(--ease-water, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion. The theme still CHANGES — it carries meaning about where you
+   are in the page — it just changes instantly instead of crossfading.
+   Never remove the state, only the tween.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body {
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Sections declare their own theme so they are correct even before the
+   observer has run (first paint, no-JS, and print).
+   -------------------------------------------------------------------------- */
+
+[data-theme-section="1"] { background: #FFFFFF; color: #0A1628; }
+[data-theme-section="2"] { background: #0A1628; color: #FFFFFF; }
+[data-theme-section="3"] { background: #F1EBE0; color: #0A1628; }
+
+[data-theme-section="1"] { --s-muted: #51687A; --s-rule: #E2DED6; --s-border: #0A1628; --s-accent: #C9A464; --s-accent-ink: #7A5C22; --s-focus: #0A1628; }
+[data-theme-section="2"] { --s-muted: #7E93A3; --s-rule: #22344A; --s-border: #FFFFFF; --s-accent: #E0C08A; --s-accent-ink: #E0C08A; --s-focus: #00B4D8; }
+[data-theme-section="3"] { --s-muted: #51687A; --s-rule: #D9CFBD; --s-border: #0A1628; --s-accent: #B8914F; --s-accent-ink: #7A5C22; --s-focus: #0A1628; }
