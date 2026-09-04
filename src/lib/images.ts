@@ -49,6 +49,32 @@ export const IMAGES = {
   "texture-foam":     { widths: [480, 960, 1024], w: 1024, h: 1024 },
   "og-share":         { widths: [480, 960, 1440, 1920], w: 1920, h: 1088 },
 
+  /* ---- Generated resort plates (2026-09-04) -------------------------------
+     One per resort where the company has no usable footage of its own, plus a
+     jetty plate for the home page and a boat plate for the day trips. Each was
+     written as a TEXT prompt from public research into how that resort looks;
+     no third-party photograph was used as a source or as an image input, so
+     nothing here is another operator's picture (CONTEXT.md §5).
+
+     They are captioned as generated where they render: the resort strip carries
+     `resortsNote`, and the two teaser modules carry a caption saying so.
+     Derived by scripts/derive-plates.py from scripts/plates.json. ---------- */
+  "resort-crystal-type": { widths: [480, 960, 1280, 1920], w: 1920, h: 2560 },
+  "resort-seastar-type": { widths: [480, 960, 1280, 1920], w: 1920, h: 2571 },
+  "resort-latolato-type": { widths: [480, 960, 1280, 1920], w: 1920, h: 2560 },
+  "resort-aminah-type": { widths: [480, 960, 1280, 1920], w: 1920, h: 2560 },
+  "resort-town-type": { widths: [480, 960, 1280, 1920], w: 1920, h: 2571 },
+  "resort-danglai-type": { widths: [480, 960, 1280, 1920], w: 1920, h: 2571 },
+  "resort-noura-type": { widths: [480, 960, 1280, 1920], w: 1920, h: 2560 },
+  "resort-nusakuya-type": { widths: [480, 960, 1280, 1920], w: 1920, h: 2560 },
+  "resort-borneodivers-type": { widths: [480, 960, 1280, 1920], w: 1920, h: 2560 },
+  "resort-egang-type": { widths: [480, 960, 1280, 1920], w: 1920, h: 2560 },
+  "resort-sisipan-type": { widths: [480, 960, 1280, 1920], w: 1920, h: 2560 },
+  "resort-bihing-type": { widths: [480, 960, 1280, 1920], w: 1920, h: 2560 },
+  "resort-chalet-ac": { widths: [480, 960, 1280, 1920], w: 1920, h: 2560 },
+  "home-jetty": { widths: [480, 960, 1280, 1920], w: 1920, h: 2571 },
+  "harian-boat": { widths: [480, 960, 1280, 1920], w: 1920, h: 3413 },
+
   /* ---- Real guest photographs (cleared 2026-09-02) ------------------- */
   "photo-boat-group":   { widths: [480, 960, 1280], w: 1280, h: 960 },
   "photo-bohey-dulang": { widths: [480, 960, 1280], w: 1280, h: 960 },

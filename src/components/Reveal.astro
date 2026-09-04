@@ -26,9 +26,11 @@ const { text, as: Tag = "h2", class: className = "", id } = Astro.props;
 
 <style is:global>
   /* ------------------------------------------------------------------------
-     The reveal, measured off the reference: each word clipped by a mask, the
-     word itself sitting 75% below its line, rising to 0 as it fades in.
-     900ms, the same easing curve as the rest of the site, 60ms between words.
+     The reveal, measured off the reference's own GSAP config on 2026-09-04:
+       y: "75%", opacity: 0, duration: 1, ease: "circ.out",
+       stagger: 0.035, delay: 0.3, start: "top bottom-=100"
+     Each word is clipped by a mask and rises from 75% below its line.
+     --ease-reveal is circ.out written as its exact cubic-bezier.
 
      Before the script runs the heading is a normal text node with opacity 0.
      `@media (scripting: none)` and the <noscript> block in Base.astro both put
@@ -49,8 +51,8 @@ const { text, as: Tag = "h2", class: className = "", id } = Astro.props;
     opacity: 0;
     transform: translateY(24px);
     transition:
-      opacity var(--dur-reveal, 900ms) var(--ease-water),
-      transform var(--dur-reveal, 900ms) var(--ease-water);
+      opacity var(--dur-reveal, 1000ms) var(--ease-reveal),
+      transform var(--dur-reveal, 1000ms) var(--ease-reveal);
   }
   .rv[data-reveal-fade][data-revealed] {
     opacity: 1;
@@ -72,13 +74,38 @@ const { text, as: Tag = "h2", class: className = "", id } = Astro.props;
     opacity: 0;
     transform: translateY(75%);
     transition:
-      opacity var(--dur-reveal, 900ms) var(--ease-water),
-      transform var(--dur-reveal, 900ms) var(--ease-water);
+      opacity var(--dur-reveal, 1000ms) var(--ease-reveal),
+      transform var(--dur-reveal, 1000ms) var(--ease-reveal);
     will-change: transform, opacity;
   }
 
   .rv[data-revealed] .rv-i {
     opacity: 1;
+    transform: none;
+  }
+
+  /* ------------------------------------------------------------------------
+     Display variant. The reference gives its biggest titles a bigger entrance
+     than the rest — the whole line starts rotated and swings straight:
+
+       .chalet-teaser_titel  translate3d(0, 150%, 0) rotateZ(15deg); opacity: 0
+
+     Ours rotates the LINE and lets the words do their normal 75% rise inside
+     it. Rotating each word instead would swing it out of its own clipping
+     mask and shear the descenders. 8deg, not the reference's 15 — their
+     titles are a single short word ("Chalets"); a Malay heading of five words
+     at 15deg reads as broken rather than as flourish.
+
+     Reserved for `.title-b--lg`. Used on every heading it stops being a
+     moment and becomes a tic.
+     ------------------------------------------------------------------------ */
+  .rv--display {
+    transform: rotate(8deg);
+    transform-origin: 0% 100%;
+    transition: transform var(--dur-reveal, 1000ms) var(--ease-reveal);
+    will-change: transform;
+  }
+  .rv--display[data-revealed] {
     transform: none;
   }
 
@@ -94,6 +121,10 @@ const { text, as: Tag = "h2", class: className = "", id } = Astro.props;
   }
 
   @media (scripting: none) {
-    .rv { opacity: 1 !important; }
+    /* transform too, not just opacity: .rv--display starts rotated. */
+    .rv {
+      opacity: 1 !important;
+      transform: none !important;
+    }
   }
 </style>

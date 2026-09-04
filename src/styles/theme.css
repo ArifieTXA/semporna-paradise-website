@@ -113,7 +113,17 @@
   --ease-micro:  cubic-bezier(0.4, 0, 0.2, 1);
   --dur-micro:   200ms;
   --dur-enter:   600ms;
-  --dur-reveal:  900ms;
+  --dur-reveal:  1000ms;
+
+  /* The reference's GSAP eases, as their exact CSS equivalents. Read off
+     belarosa-chalet.ch on 2026-09-04; each is the published cubic-bezier for
+     that named GSAP ease, not an approximation by eye.
+       circ.out    word + line reveals
+       power3.out  slider item entrances
+       power1.out  the scroll-theme cross-fade                                */
+  --ease-reveal: cubic-bezier(0, 0.55, 0.45, 1);
+  --ease-slide:  cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-theme:  cubic-bezier(0, 0, 0.58, 1);
 }
 
 /* ==========================================================================

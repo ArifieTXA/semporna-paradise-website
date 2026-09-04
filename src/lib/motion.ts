@@ -8,8 +8,10 @@
  * ONE smooth-scroll engine: Lenis. Never Locomotive as well. audit.py asserts it.
  */
 
+import type Lenis from "lenis";
 import { initWordReveals } from "./reveal";
 import { initScrollTheme } from "./scroll-theme";
+import { initScrollFx } from "./scroll-fx";
 
 const REDUCE_QUERY = "(prefers-reduced-motion: reduce)";
 
@@ -21,31 +23,63 @@ export function prefersReduced(): boolean {
 /* Smooth scroll                                                              */
 /* -------------------------------------------------------------------------- */
 
-let lenis: { raf: (t: number) => void; destroy: () => void } | null = null;
+let lenis: Lenis | null = null;
+let rafId = 0;
 
-export async function initSmoothScroll(): Promise<void> {
+/**
+ * Tuned to the reference, measured off belarosa-chalet.ch on 2026-09-04:
+ *
+ *   new Lenis({ lerp: 0.1, wheelMultiplier: 0.5,
+ *               gestureOrientation: "vertical",
+ *               normalizeWheel: false, smoothTouch: false })
+ *
+ * `wheelMultiplier: 0.5` is the single biggest reason that page feels heavy —
+ * one wheel click moves it half as far as a normal page, so every scroll-linked
+ * transform gets twice as long on screen. It is also the reason our own numbers
+ * for parallax and grow are worth copying literally: they were read at this
+ * scroll rate.
+ *
+ * `lerp` and `duration` are mutually exclusive in Lenis. Passing `lerp` makes it
+ * a per-frame interpolation towards the target rather than a fixed-length tween,
+ * which is what the reference does and what ScrollTrigger's scrub expects.
+ */
+export async function initSmoothScroll(): Promise<Lenis | null> {
   // The guard is here, before construction. Not a later .stop().
-  if (prefersReduced()) return;
+  if (prefersReduced()) return null;
 
   const { default: Lenis } = await import("lenis");
 
   const instance = new Lenis({
-    duration: 1.1,
-    easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    smoothWheel: true,
+    lerp: 0.1,
+    wheelMultiplier: 0.5,
     touchMultiplier: 1.6,
+    gestureOrientation: "vertical",
+    normalizeWheel: false,
+    smoothWheel: true,
   });
 
-  lenis = instance as unknown as typeof lenis;
+  lenis = instance;
 
+  // Its own loop, for now. scroll-fx.ts cancels this and hands the clock to
+  // GSAP's ticker once ScrollTrigger is up, so the two never tick separately.
+  // If that chunk never arrives, this loop is what keeps smooth scroll working.
   function raf(time: number) {
     instance.raf(time);
-    requestAnimationFrame(raf);
+    rafId = requestAnimationFrame(raf);
   }
-  requestAnimationFrame(raf);
+  rafId = requestAnimationFrame(raf);
+
+  return instance;
+}
+
+/** Called by scroll-fx.ts when GSAP's ticker takes over the frame loop. */
+export function releaseSmoothScrollRaf(): void {
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = 0;
 }
 
 export function destroySmoothScroll(): void {
+  releaseSmoothScrollRaf();
   lenis?.destroy();
   lenis = null;
 }
@@ -176,5 +210,12 @@ export function initMotion(): void {
   initReveals();
   initNavEdge();
   initVideoTiles();
-  void initSmoothScroll();
+
+  // Smooth scroll first, THEN the scroll-linked transforms — ScrollTrigger has
+  // to be handed the Lenis instance to read scroll position from, or the two
+  // run on separate clocks and the parallax lags the page under a fast fling.
+  // Both are dynamic imports and neither blocks anything above.
+  void initSmoothScroll().then((instance) =>
+    initScrollFx(instance, releaseSmoothScrollRaf),
+  );
 }

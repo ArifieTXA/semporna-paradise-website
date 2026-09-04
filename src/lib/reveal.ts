@@ -27,8 +27,16 @@
 
 const REDUCE_QUERY = "(prefers-reduced-motion: reduce)";
 
-/** Matches the reference: 60ms between words, 900ms per word. */
-const STAGGER_MS = 60;
+/**
+ * Matches the reference exactly, read off its GSAP config on 2026-09-04:
+ * `stagger: 0.035, duration: 1, ease: "circ.out", delay: 0.3`.
+ * The duration, easing and base delay live in CSS (--dur-reveal,
+ * --ease-reveal, .rv-i transition-delay); only the per-word step is here.
+ */
+const STAGGER_MS = 35;
+
+/** The reference's `delay: 0.3` — the whole line waits, then the words step. */
+const BASE_DELAY_MS = 300;
 
 function splitOne(el: HTMLElement): boolean {
   const child = el.firstChild;
@@ -49,7 +57,7 @@ function splitOne(el: HTMLElement): boolean {
     mask.className = "rv-w";
     const inner = document.createElement("span");
     inner.className = "rv-i";
-    inner.style.transitionDelay = `${i * STAGGER_MS}ms`;
+    inner.style.transitionDelay = `${BASE_DELAY_MS + i * STAGGER_MS}ms`;
     inner.textContent = word;
     mask.append(inner);
     frag.append(mask);

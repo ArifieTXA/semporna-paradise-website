@@ -1,0 +1,297 @@
+---
+/**
+ * <TeaserModule> — the BelArosa editorial block. Motion inventory #8 + #9.
+ *
+ * This is the shape the owner pointed at: a column of text that STAYS while a
+ * tall image scrolls past it, the image sliding inside its own frame, the frame
+ * growing from 80% to full size as it arrives.
+ *
+ * Reference DOM, read off the live site on 2026-09-04 (the static capture is
+ * missing BelArosa's external stylesheet, so a capture-only reading wrongly
+ * concludes nothing is sticky — these came from computed styles on the running
+ * page):
+ *
+ *   .teaser-modul_wrap            position: relative      h 687px
+ *    +- .teaser-modul             display: flex, gap 48px
+ *       +- span-1  image column
+ *       |   +- .image-parallax_trigger   overflow: hidden      <- the window
+ *       |       +- .image-parallax_target translateY +10%/-10%
+ *       +- span-2  text column
+ *           +- text-holder        position: relative, full height
+ *               +- .teaser-modul_text-wrap  position: sticky; top: 216px
+ *
+ * `top: 216px` on the reference. Here it is calc(var(--hdr-h) + 4.5rem), and
+ * --hdr-h is 9rem, so it resolves to exactly 216px — the same number, derived
+ * from our own header rather than copied.
+ *
+ * Three variants alternate down the page, as they do on the reference:
+ *   left      image left,  text right, 3:4 image
+ *   right     image right, text left,  3:4 image
+ *   centered  image full width 3:2, text below it, centred, no sticky travel
+ *
+ * ── Reduced motion ───────────────────────────────────────────────────────
+ * The sticky column STAYS. It is layout, not motion — it animates nothing and
+ * it is what makes the section legible. Only the two transforms drop out, and
+ * they drop out by never being registered in scroll-fx.ts; the CSS below
+ * already paints their rest state, so there is no reset frame.
+ *
+ * ── Without JavaScript ───────────────────────────────────────────────────
+ * Everything renders. The window is a plain clipped box, the target sits at
+ * translateY(0), the image fills it. Nothing here waits on a script.
+ */
+import Reveal from "./Reveal.astro";
+
+interface Props {
+  variant?: "left" | "right" | "centered";
+  eyebrow: string;
+  heading: string;
+  lead?: string;
+  href?: string;
+  cta?: string;
+  /** Scroll theme this block claims while it owns the mid-line. */
+  theme?: "1" | "2" | "3";
+  /** Anchor target, e.g. "after-hero". */
+  id?: string;
+  /** Give the heading the large display size + the rotated word entrance. */
+  display?: boolean;
+  /**
+   * Aspect ratio of the image window. This is what buys the sticky travel:
+   * the text only appears to STAY if the image column is taller than it, so a
+   * module with a long text block (a list, a set of steps) needs a taller
+   * image than one with three lines of lead. Measured per module, not guessed
+   * — see the travel figures in the verification notes.
+   */
+  ratio?: string;
+  class?: string;
+}
+
+const {
+  variant = "left",
+  eyebrow,
+  heading,
+  lead,
+  href,
+  cta,
+  theme = "1",
+  id,
+  display = false,
+  ratio = "3 / 4",
+  class: className = "",
+} = Astro.props;
+---
+
+<section
+  class:list={["band", "tm", className]}
+  data-variant={variant}
+  data-theme-section={theme}
+  id={id}
+  style={`--tm-ratio:${ratio}`}
+>
+  <div class="tm__grid">
+    <div class="tm__media">
+      {/* The window clips. It also carries the grow, because growing the frame
+          and its contents together is what reads as "the image gets larger";
+          scaling the image inside a fixed frame just crops it. */}
+      <div class="tm__window" data-fx="scale">
+        <div class="tm__target" data-fx="parallax">
+          <slot name="media" />
+        </div>
+      </div>
+      {
+        Astro.slots.has("caption") && (
+          <figcaption class="tm__cap cap-b">
+            <slot name="caption" />
+          </figcaption>
+        )
+      }
+    </div>
+
+    <div class="tm__textcol">
+      <div class="tm__text">
+        <p class="eyebrow-b">{eyebrow}</p>
+        <Reveal
+          as="h2"
+          text={heading}
+          class={display ? "title-b title-b--lg rv--display" : "title-b"}
+        />
+        {lead && <p class="lead-b">{lead}</p>}
+        <slot />
+        {href && cta && <p class="tm__cta"><a class="link-b" href={href}>{cta}</a></p>}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ------------------------------------------------------------------------
+     The module bleeds past .rail to the viewport edge, the way the reference's
+     images do, and the text column re-aligns itself with its own padding. That
+     is the same structure DragGallery already uses on this page.
+     ------------------------------------------------------------------------ */
+  .tm {
+    position: relative;
+  }
+
+  .tm__grid {
+    display: flex;
+    align-items: flex-start;
+    gap: 3rem; /* 48px — the reference's gap */
+    max-width: 90rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.5rem, 4vw, 4rem);
+  }
+
+  .tm[data-variant="right"] .tm__grid {
+    flex-direction: row-reverse;
+  }
+
+  /* --- the image column ------------------------------------------------- */
+
+  .tm__media {
+    flex: 0 0 44%;
+    min-width: 0;
+  }
+
+  .tm__window {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: var(--tm-ratio, 3 / 4);
+    /* The grow is composited. Without this the scale repaints the decoded
+       image every frame, which is the whole cost of the effect. */
+    will-change: transform;
+    /* radius tokens are 0 site-wide and stay that way (DESIGN.md) */
+    border-radius: 0;
+  }
+
+  /* 120% tall, pulled up 10%, so a +/-10%-of-window slide never exposes an
+     edge. The reference gets away with a 100% target only because its parked
+     state happens to be the extreme; ours is correct at every scroll position. */
+  .tm__target {
+    position: absolute;
+    inset: -10% 0;
+    will-change: transform;
+  }
+
+  /* The media slot is passed as `<div slot="media"><Img …/></div>`, because
+     Img's own prop is called `slot` and would collide with Astro's named-slot
+     attribute. So every wrapper between the target and the pixels has to be
+     told to fill, not just the direct child. */
+  .tm__target > :global(*),
+  .tm__target :global(picture),
+  .tm__target :global(figure) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+  }
+
+  /* The doubled class is deliberate. Img.astro's own scoped rule is
+     `.img img { height: auto }`, which lands at exactly the same specificity as
+     `.tm__target :global(img)` — so the winner would be decided by stylesheet
+     order, which is not something to leave to chance. Repeating the class wins
+     it outright without reaching for !important. */
+  .tm__target.tm__target :global(img),
+  .tm__target.tm__target :global(video) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Img.astro sets an aspect-ratio when given `ratio`; inside the window the
+       window owns the shape, so override it rather than fight it. */
+    aspect-ratio: auto !important;
+  }
+
+  .tm__cap {
+    margin-top: 1rem;
+  }
+
+  /* --- the text column -------------------------------------------------- */
+
+  .tm__textcol {
+    flex: 1 1 auto;
+    min-width: 0;
+    /* Full height, so the sticky child has something to travel inside. This is
+       the half people forget: sticky with no taller relative parent never
+       moves, and the effect silently does nothing. */
+    align-self: stretch;
+  }
+
+  .tm__text {
+    position: sticky;
+    top: calc(var(--hdr-h, 9rem) + 4.5rem); /* = 216px, the reference's value */
+  }
+
+  .tm__cta {
+    margin-top: clamp(1.5rem, 3vw, 2rem);
+  }
+
+  /* --- centred variant: image full width, text beneath ------------------ */
+
+  .tm[data-variant="centered"] .tm__grid {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tm[data-variant="centered"] .tm__media {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  /* The centred variant is always wide: its text sits underneath, so a tall
+     image would just push the words off the screen. */
+  .tm[data-variant="centered"] .tm__window {
+    aspect-ratio: 3 / 2;
+  }
+
+  .tm[data-variant="centered"] .tm__textcol {
+    width: 100%;
+    max-width: 46rem;
+    text-align: center;
+  }
+
+  /* No taller parent to travel in, so sticky here would only ever pin at the
+     top of its own box. Say so, rather than leaving a rule that does nothing. */
+  .tm[data-variant="centered"] .tm__text {
+    position: static;
+  }
+
+  .tm[data-variant="centered"] :global(.title-b),
+  .tm[data-variant="centered"] :global(.lead-b) {
+    margin-inline: auto;
+  }
+
+  /* --- stacked ---------------------------------------------------------- */
+
+  @media (max-width: 899px) {
+    .tm__grid,
+    .tm[data-variant="right"] .tm__grid {
+      flex-direction: column;
+      gap: clamp(2rem, 6vw, 3rem);
+    }
+    .tm__media {
+      flex: 0 0 auto;
+      width: 100%;
+    }
+    /* Stacked: the per-module ratio stops mattering once nothing is beside
+       the image, and a 3/5 portrait would eat a whole phone screen. */
+    .tm__window {
+      aspect-ratio: 4 / 3;
+    }
+    /* Nothing beside it to stay next to. A column that pins on its own just
+       looks stuck. */
+    .tm__text {
+      position: static;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tm__window,
+    .tm__target {
+      will-change: auto;
+    }
+    /* scroll-fx.ts never registers these, so the rest state below IS the final
+       state. Stated explicitly so it survives someone editing the JS later. */
+    .tm__target {
+      transform: none;
+    }
+  }
+</style>

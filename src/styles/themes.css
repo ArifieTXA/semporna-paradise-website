@@ -94,20 +94,21 @@
 /* --------------------------------------------------------------------------
    The transition. Only the page-level surfaces animate; text colour crossfades
    with them so a heading never flashes an unreadable pair mid-swap.
-   700ms is measured off the reference's own theme change.
+   750ms + power1.out are the reference's own values, read off its
+   <style id="color-themes" speed="0.75" ease="power1.out"> on 2026-09-04.
    -------------------------------------------------------------------------- */
 
 html {
   background: var(--t-bg);
-  transition: background-color 700ms var(--ease-water, cubic-bezier(0.22, 1, 0.36, 1));
+  transition: background-color 750ms var(--ease-theme, cubic-bezier(0, 0, 0.58, 1));
 }
 
 body {
   background: var(--t-bg);
   color: var(--t-text);
   transition:
-    background-color 700ms var(--ease-water, cubic-bezier(0.22, 1, 0.36, 1)),
-    color 700ms var(--ease-water, cubic-bezier(0.22, 1, 0.36, 1));
+    background-color 750ms var(--ease-theme, cubic-bezier(0, 0, 0.58, 1)),
+    color 750ms var(--ease-theme, cubic-bezier(0, 0, 0.58, 1));
 }
 
 /* --------------------------------------------------------------------------

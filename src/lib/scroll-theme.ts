@@ -38,20 +38,31 @@ export function initScrollTheme(): void {
 
   /**
    * More than one section can straddle the mid-line during a fast fling, so
-   * pick the one whose own centre is nearest to it rather than trusting
-   * callback order.
+   * pick a winner rather than trusting callback order.
+   *
+   * CONTAINMENT WINS FIRST, then centre distance. Ranking by centre distance
+   * alone breaks as soon as a section is much taller than the viewport — a tall
+   * one's centre sits far from the mid-line for most of its scroll, so a short
+   * neighbour that is nowhere near the mid-line can still out-rank the section
+   * the visitor is actually looking at, and the theme flickers. That became a
+   * real case when the teaser modules landed (2026-09-04): each is ~1.5 screens
+   * tall.
    */
   function settle(): void {
     if (!live.size) return;
     const mid = window.innerHeight / 2;
     let best: HTMLElement | null = null;
-    let bestDist = Infinity;
+    let bestScore = Infinity;
 
     for (const el of live) {
       const r = el.getBoundingClientRect();
       const dist = Math.abs((r.top + r.bottom) / 2 - mid);
-      if (dist < bestDist) {
-        bestDist = dist;
+      const contains = r.top <= mid && r.bottom >= mid;
+      // Containment outranks every non-containing section; among two that both
+      // contain the line, the nearer centre still wins.
+      const score = contains ? dist - 1e6 : dist;
+      if (score < bestScore) {
+        bestScore = score;
         best = el;
       }
     }

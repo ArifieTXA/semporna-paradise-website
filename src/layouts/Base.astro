@@ -259,7 +259,11 @@ const skipLabel = lang === "bm" ? "Terus ke kandungan utama" : "Skip to main con
       [data-reveal][data-revealed] { opacity: 1; transform: none; }
       /* If the motion chunk fails or never loads, sections must still show. */
       @media (scripting: none) {
-        [data-reveal] { opacity: 1 !important; transform: none !important; }
+        /* [data-reveal-words] is here too because the display variant of
+           <Reveal> starts ROTATED, not just faded. Opacity alone would leave a
+           heading sitting at 8deg forever on a browser with scripting off. */
+        [data-reveal],
+        [data-reveal-words] { opacity: 1 !important; transform: none !important; }
       }
 
       /* ---- Skip link ---- */

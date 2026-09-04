@@ -1,17 +1,14 @@
 ---
 /**
- * <FullscreenTeaser> — the dark Ocean Deep panel with the marquee, motion #7.
+ * <FullscreenTeaser> — the dark Ocean Deep panel, motion #7.
  *
  * The reference's "Experience Arosa" band: a full-bleed dark section with one
- * serif line and a link that repeats across the width, sliding forever. The
- * repeat is what makes it read as a band rather than a button.
+ * serif line and a link beneath it.
  *
- * The marquee is pure CSS: one strip duplicated, translated -50%, looped. The
- * duplicate is `aria-hidden`, so a screen reader hears the phrase ONCE, not
- * eight times — the usual failure mode of a marquee.
- *
- * Under `prefers-reduced-motion` the animation is removed and the strip sits
- * still. It is decorative; the real link sits above it and is unaffected.
+ * The sliding "Terokai Semporna" / "Explore Semporna" marquee that used to run
+ * under the copy was removed on the owner's direction (2026-09-04). It carried
+ * no information the CTA above it did not already carry, and it was the only
+ * always-on animation left on the page.
  */
 import type { Lang } from "../lib/gated";
 
@@ -21,16 +18,11 @@ interface Props {
   /** The serif line. Word-split at runtime by <Reveal>'s initialiser. */
   title: string;
   lead?: string;
-  /** The phrase that repeats across the band. */
-  marquee: string;
   href: string;
   cta: string;
 }
 
-const { lang, eyebrow, title, lead, marquee, href, cta } = Astro.props;
-
-// Enough copies that the strip is wider than any viewport before it repeats.
-const REPEATS = 8;
+const { lang, eyebrow, title, lead, href, cta } = Astro.props;
 ---
 
 <section class="ft" data-theme-section="2">
@@ -40,22 +32,6 @@ const REPEATS = 8;
     {lead && <p class="ft__lead">{lead}</p>}
     <a class="ft__cta" href={href}>{cta}</a>
   </div>
-
-  <a class="ft__marquee" href={href} aria-label={marquee}>
-    <span class="ft__strip">
-      <span class="ft__run">
-        {Array.from({ length: REPEATS }).map(() => (
-          <span class="ft__word">{marquee}<span class="ft__dot" aria-hidden="true">◆</span></span>
-        ))}
-      </span>
-      {/* The second run is what makes the loop seamless. Never announced. */}
-      <span class="ft__run" aria-hidden="true">
-        {Array.from({ length: REPEATS }).map(() => (
-          <span class="ft__word">{marquee}<span class="ft__dot">◆</span></span>
-        ))}
-      </span>
-    </span>
-  </a>
 </section>
 
 <style>
@@ -115,55 +91,4 @@ const REPEATS = 8;
   }
   .ft__cta:hover { color: #E0C08A; }
 
-  /* ---- The marquee ---- */
-  .ft__marquee {
-    display: block;
-    margin-top: clamp(3rem, 6vw, 5rem);
-    color: inherit;
-    text-decoration: none;
-    /* Fades at both edges so the phrase enters and leaves rather than cutting. */
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
-    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
-  }
-
-  .ft__strip {
-    display: flex;
-    width: max-content;
-    animation: ft-slide 42s linear infinite;
-  }
-  .ft__marquee:hover .ft__strip { animation-play-state: paused; }
-
-  .ft__run { display: flex; }
-
-  .ft__word {
-    display: inline-flex;
-    align-items: center;
-    gap: clamp(1.5rem, 3vw, 3rem);
-    padding-inline: clamp(0.75rem, 1.5vw, 1.5rem);
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: clamp(2.5rem, 7vw, 5rem);
-    line-height: 1.25;
-    white-space: nowrap;
-    color: rgba(255, 255, 255, 0.14);
-    transition: color var(--dur-micro) var(--ease-micro);
-  }
-  .ft__marquee:hover .ft__word { color: rgba(224, 192, 138, 0.28); }
-
-  .ft__dot {
-    font-size: 0.32em;
-    color: #E0C08A;
-    opacity: 0.6;
-  }
-
-  @keyframes ft-slide {
-    from { transform: translate3d(0, 0, 0); }
-    to   { transform: translate3d(-50%, 0, 0); }
-  }
-
-  /* Decorative motion. Removed entirely under reduce — the strip still reads,
-     it simply stops. The real link above it is untouched. */
-  @media (prefers-reduced-motion: reduce) {
-    .ft__strip { animation: none; }
-  }
 </style>

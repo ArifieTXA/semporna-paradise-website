@@ -1,0 +1,92 @@
+[
+  {
+    "slot": "resort-crystal-type",
+    "localFile": "img-raw/resort-crystal-type.png",
+    "model": "gpt-image-2-text-to-image",
+    "note": "Crystal Resort type: one row of pale-timber chalets, steep roofs, shallow turquoise water."
+  },
+  {
+    "slot": "resort-seastar-type",
+    "localFile": "img-raw/resort-seastar-type.png",
+    "model": "nano-banana-pro",
+    "note": "Seastar type: two rows of dark timber villas flanking a wide boardwalk, golden hour, open sea."
+  },
+  {
+    "slot": "resort-latolato-type",
+    "localFile": "img-raw/resort-latolato-type.png",
+    "model": "gpt-image-2-text-to-image",
+    "note": "Lato-Lato type: red-orange roofs, white walls, white-railed walkway, shallow aqua water."
+  },
+  {
+    "slot": "resort-aminah-type",
+    "localFile": "img-raw/resort-aminah-type.png",
+    "model": "gpt-image-2-text-to-image",
+    "note": "Aminah type: plain thatched-roof timber chalets, narrow walkway, shallow turquoise water."
+  },
+  {
+    "slot": "resort-town-type",
+    "localFile": "img-raw/resort-town-type.png",
+    "model": "nano-banana-pro",
+    "note": "Pakej Bandar: the Semporna town pier and its moored boats. Not a water resort."
+  },
+  {
+    "slot": "resort-danglai-type",
+    "localFile": "img-raw/resort-danglai-type.png",
+    "model": "nano-banana-pro",
+    "note": "Danglai type: premium thatched villa, orange deck, plunge pool, sandbar beyond."
+  },
+  {
+    "slot": "resort-noura-type",
+    "localFile": "img-raw/resort-noura-type.png",
+    "model": "gpt-image-2-text-to-image",
+    "note": "Noura type: mid-range chalets, grey metal roofs, railed walkway, overcast light."
+  },
+  {
+    "slot": "resort-borneodivers-type",
+    "localFile": "img-raw/resort-borneodivers-type.png",
+    "model": "gpt-image-2-text-to-image",
+    "note": "Borneo Divers Mabul type: island beach resort among palms with a long dive jetty."
+  },
+  {
+    "slot": "resort-nusakuya-type",
+    "localFile": "img-raw/resort-nusakuya-type.png",
+    "model": "gpt-image-2-text-to-image",
+    "note": "Nusakuya type: a small overwater resort from the water, main building plus chalets."
+  },
+  {
+    "slot": "resort-egang-type",
+    "localFile": "img-raw/resort-egang-type.png",
+    "model": "gpt-image-2-text-to-image",
+    "note": "Egang-Egang type: budget white-clad chalets on stilts over shallow water."
+  },
+  {
+    "slot": "resort-sisipan-type",
+    "localFile": "img-raw/resort-sisipan-type.png",
+    "model": "gpt-image-2-text-to-image",
+    "note": "Sisipan type: a row of honey-timber chalets seen along the walkway, late light."
+  },
+  {
+    "slot": "resort-bihing-type",
+    "localFile": "img-raw/resort-bihing-type.png",
+    "model": "gpt-image-2-text-to-image",
+    "note": "Bihing Angan type: a few plain timber chalets on stilts with a ladder into the sea."
+  },
+  {
+    "slot": "resort-chalet-ac",
+    "localFile": "img-raw/resort-chalet-ac.png",
+    "model": "gpt-image-2-text-to-image",
+    "note": "Air-conditioned chalet interior. Used for the Egang-Egang air-con row."
+  },
+  {
+    "slot": "home-jetty",
+    "localFile": "img-raw/home-jetty.png",
+    "model": "nano-banana-pro",
+    "note": "Home / Falsafah: the Semporna town jetty at first light, boats and gear on the deck."
+  },
+  {
+    "slot": "harian-boat",
+    "localFile": "img-raw/harian-boat.png",
+    "model": "gpt-image-2-text-to-image",
+    "note": "Day trips: guests in life jackets on a boat, seen from behind, islands ahead. 9:16."
+  }
+]

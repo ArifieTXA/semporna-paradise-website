@@ -142,6 +142,64 @@ caption them as generated (DESIGN.md §7).
 
 ---
 
+## 3b. Generated resort plates — 15 (2026-09-04)
+
+One plate per resort where the company has no usable footage of its own, plus a
+jetty plate for the home page and a boat plate for the day trips.
+
+**Why these exist.** The homepage resort strip used to fall back to four generic
+Wikimedia stills, so ten resorts shared the same stilt-village and reef pictures.
+A card for a resort was showing a stranger's house. Other operators' own
+photography is still not publishable (§5), so each card now carries a generated
+plate matched to that resort's look and price tier.
+
+**How the prompts were written, and the line that was held.** Each prompt is text
+only, written from public research into how that place actually looks — resort and
+agent listings, and image searches run in a browser. **No third-party photograph
+was used as a source file or as an `image_input` to any model.** Feeding another
+operator's picture into a generator would make a derivative of it, which is the
+one thing the 2026-09-03 owner override does not cover. Prompts describe the
+Semporna vernacular and the tier, never a single identifiable building, sign or
+logo, and every prompt forbids text, signage, logos and identifiable faces.
+
+**How they are labelled in the page.** The resort strip carries `resortsNote` in
+both languages: the cards can be a generated image of the type of stay, not a
+photograph of that resort building, and the reader is told to ask for current
+photos on WhatsApp. The two teaser modules carry an "Imej dijana" caption. The
+plates are therefore never presented as documentary photographs.
+
+Prompts are recorded in `scripts/plates.json`. Derivatives are built by
+`scripts/derive-plates.py` at 480/960/1280/1920 in AVIF and WebP, the same slot
+system as everything else.
+
+Four reels whose captions name a resort were checked frame by frame and
+**rejected**: Danglai (night footage under a heavy burnt-in overlay), Egang-Egang
+(a bathroom sink), Borneo Divers (a tree trunk) and Noura (a piece to camera with
+an identifiable face, from a buka puasa visit rather than a stay). Sisipan,
+Nusakuya and Bihing Angan had built tiles, but the frames showed a bathtub, a
+toilet and a watermarked dusk shot, so they take plates too. Adil Waterhouse keeps its reel: the zipline in it is a real
+inclusion on that package.
+
+| Slot | Master | Owner | Licence | Model | Cleared | Date |
+|---|---|---|---|---|---|---|
+| `resort-crystal-type` | `img-raw/resort-crystal-type.png` | Semporna Paradise | Company-owned (generated) | gpt-image-2-text-to-image | Yes | 2026-09-04 |
+| `resort-seastar-type` | `img-raw/resort-seastar-type.png` | Semporna Paradise | Company-owned (generated) | nano-banana-pro | Yes | 2026-09-04 |
+| `resort-latolato-type` | `img-raw/resort-latolato-type.png` | Semporna Paradise | Company-owned (generated) | gpt-image-2-text-to-image | Yes | 2026-09-04 |
+| `resort-aminah-type` | `img-raw/resort-aminah-type.png` | Semporna Paradise | Company-owned (generated) | gpt-image-2-text-to-image | Yes | 2026-09-04 |
+| `resort-town-type` | `img-raw/resort-town-type.png` | Semporna Paradise | Company-owned (generated) | nano-banana-pro | Yes | 2026-09-04 |
+| `resort-danglai-type` | `img-raw/resort-danglai-type.png` | Semporna Paradise | Company-owned (generated) | nano-banana-pro | Yes | 2026-09-04 |
+| `resort-noura-type` | `img-raw/resort-noura-type.png` | Semporna Paradise | Company-owned (generated) | gpt-image-2-text-to-image | Yes | 2026-09-04 |
+| `resort-borneodivers-type` | `img-raw/resort-borneodivers-type.png` | Semporna Paradise | Company-owned (generated) | gpt-image-2-text-to-image | Yes | 2026-09-04 |
+| `resort-nusakuya-type` | `img-raw/resort-nusakuya-type.png` | Semporna Paradise | Company-owned (generated) | gpt-image-2-text-to-image | Yes | 2026-09-04 |
+| `resort-egang-type` | `img-raw/resort-egang-type.png` | Semporna Paradise | Company-owned (generated) | gpt-image-2-text-to-image | Yes | 2026-09-04 |
+| `resort-sisipan-type` | `img-raw/resort-sisipan-type.png` | Semporna Paradise | Company-owned (generated) | gpt-image-2-text-to-image | Yes | 2026-09-04 |
+| `resort-bihing-type` | `img-raw/resort-bihing-type.png` | Semporna Paradise | Company-owned (generated) | gpt-image-2-text-to-image | Yes | 2026-09-04 |
+| `resort-chalet-ac` | `img-raw/resort-chalet-ac.png` | Semporna Paradise | Company-owned (generated) | gpt-image-2-text-to-image | Yes | 2026-09-04 |
+| `home-jetty` | `img-raw/home-jetty.png` | Semporna Paradise | Company-owned (generated) | nano-banana-pro | Yes | 2026-09-04 |
+| `harian-boat` | `img-raw/harian-boat.png` | Semporna Paradise | Company-owned (generated) | gpt-image-2-text-to-image | Yes | 2026-09-04 |
+
+---
+
 ## 4. Free-licence Wikimedia Commons stills — 13
 
 Harvested and licence-vetted by `scripts/harvest-commons.py`, which accepts

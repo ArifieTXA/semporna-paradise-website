@@ -45,43 +45,141 @@ import FullscreenTeaser from "../FullscreenTeaser.astro";
 import GuestGallery from "../GuestGallery.astro";
 import PriceComparison from "../PriceComparison.astro";
 import Reveal from "../Reveal.astro";
+import TeaserModule from "../TeaserModule.astro";
 import { gallery } from "../../data/photos";
 import { RESORTS, fromPrice } from "../../data/resorts";
 import { DAY_TRIPS } from "../../data/products";
 import { TILES, PORTRAIT_TILES } from "../../data/tiles";
 import { creditAlt } from "../../data/photo-credits";
+import type { ImageSlot } from "../../lib/images";
 import { href, resortDetailPath, ROUTES, type RouteId } from "../../lib/routes";
-import { COMPANY } from "../../data/config";
 import type { Lang } from "../../lib/gated";
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 
 /* -------------------------------------------------------------------------- */
-/* Resort cards. A resort shows the company's own reel of it where one exists  */
-/* and a free-licence still otherwise. Never another operator's photography.   */
+/* Resort cards.                                                              */
+/*                                                                            */
+/* Rebuilt 2026-09-04. What was here before: ten slugs mapped to a company     */
+/* reel, and everything else cycling four generic Commons stills — so Danglai, */
+/* Crystal, Seastar, Noura, Lato-Lato, Egang-Egang, Aminah, Borneo Divers and  */
+/* Pakej Bandar all showed the same stilt-village and reef photographs. A card */
+/* for a resort showed a stranger's house.                                    */
+/*                                                                            */
+/* Now every card is mapped by hand, one of two ways:                         */
+/*                                                                            */
+/*   REEL_BY_SLUG   the company's own footage of that resort, where the frame  */
+/*                  actually shows the place. Checked one by one.              */
+/*   PLATE_BY_SLUG  a generated plate matched to that resort's own look and    */
+/*                  price tier, written from public research. No other         */
+/*                  operator's photograph was used, as a source or as an image */
+/*                  input — the owner cannot license what he does not own      */
+/*                  (CONTEXT.md §5). The strip carries `resortsNote` under it, */
+/*                  which says in the page that these are generated images of  */
+/*                  the type of stay, not photographs of that resort.          */
+/*                                                                            */
+/* Four reels that name a resort in their caption were checked and rejected:   */
+/* Danglai (night footage, heavy burnt-in overlay), Egang-Egang (a bathroom    */
+/* sink), Borneo Divers (a tree trunk) and Noura (a piece to camera, an        */
+/* identifiable face, and a buka puasa visit rather than a stay). Sisipan,     */
+/* Nusakuya and Bihing Angan had built tiles, but the frames showed a bathtub, */
+/* a toilet and a watermarked dusk shot, so they take plates too. Adil keeps   */
+/* its zipline frame: the zipline is a real inclusion on that package          */
+/* (resorts.ts INC.zipline).                                                  */
 /* -------------------------------------------------------------------------- */
 
 const REEL_BY_SLUG: Record<string, string> = {
   "adil-waterhouse":   "reel-Da38CbYzyF4",
   "royal":             "reel-DYnrsm5DMF8",
   "dayang":            "reel-DYvfflFlOUm",
-  "sisipan":           "reel-DY8SKpQjZhK",
   "singamata-basic":   "reel-DYvaKb",
-  "singamata-deluxe":  "reel-DYvaKb",
   "maglami-lami":      "reel-DYnruNyDtRQ",
   "paghalian":         "reel-DYN6RsbEpQp",
-  "bihing-angan":      "reel-DY3Olyzisf7",
-  "nusakuya":          "reel-DY5tWTZjUya",
 };
 
-/** Free-licence stand-ins, cycled so no two neighbours repeat. */
-const FALLBACK_STILLS = ["cm-stilt-lagoon", "cm-stilt-village", "cm-reef-mosaic", "cm-white-beach"] as const;
+/** Generated plates, one per resort. Keys never collide with REEL_BY_SLUG. */
+const PLATE_BY_SLUG: Record<string, ImageSlot> = {
+  "danglai":             "resort-danglai-type",
+  "sisipan":             "resort-sisipan-type",
+  "crystal":             "resort-crystal-type",
+  "seastar":             "resort-seastar-type",
+  "noura":               "resort-noura-type",
+  "singamata-deluxe":    "resort-generic-1",
+  "lato-lato":           "resort-latolato-type",
+  "bihing-angan":        "resort-bihing-type",
+  "egang-egang-fan":     "resort-egang-type",
+  "egang-egang-ac":      "resort-chalet-ac",
+  "aminah":              "resort-aminah-type",
+  "nusakuya":            "resort-nusakuya-type",
+  "borneo-divers-mabul": "resort-borneodivers-type",
+  "pakej-bandar":        "resort-town-type",
+};
 
-const resortCards = RESORTS.map((r, i) => ({
+/** Alt text for the plates. Describes the frame, never claims the building. */
+const PLATE_ALT: Record<string, Record<Lang, string>> = {
+  "resort-danglai-type": {
+    bm: "Vila atas air dengan bumbung rumbia, dek kayu luas dan kolam kecil, menghadap air pirus dan beting pasir putih.",
+    en: "An overwater villa with a thatched roof, a wide timber deck and a small pool, facing turquoise water and a white sandbar.",
+  },
+  "resort-sisipan-type": {
+    bm: "Deretan chalet atas tiang dengan dinding kayu dan laluan papan yang melalui setiap pintu, pada cahaya petang.",
+    en: "A row of chalets on stilts with timber walls and a walkway running past every door, in afternoon light.",
+  },
+  "resort-crystal-type": {
+    bm: "Sebaris chalet atas air dengan dinding kayu pucat dan bumbung curam, di atas air pirus cetek.",
+    en: "A single row of overwater chalets with pale timber walls and steep roofs, above shallow turquoise water.",
+  },
+  "resort-seastar-type": {
+    bm: "Dua baris vila atas air kayu gelap mengapit laluan papan yang lebar, pada cahaya senja.",
+    en: "Two rows of dark timber overwater villas flanking a wide boardwalk, in low evening light.",
+  },
+  "resort-noura-type": {
+    bm: "Deretan chalet atas air dengan bumbung logam kelabu dan laluan papan berpagar, di atas lagun cetek.",
+    en: "A row of overwater chalets with grey metal roofs and a railed walkway, above a shallow lagoon.",
+  },
+  "resort-generic-1": {
+    bm: "Dalam sebuah chalet atas air: katil bercadar putih dan pintu terbuka menghadap laut.",
+    en: "Inside an overwater chalet: a bed with white linen and open doors facing the sea.",
+  },
+  "resort-latolato-type": {
+    bm: "Chalet atas air berbumbung merah dengan dinding putih dan laluan papan berpagar putih, di atas air cetek.",
+    en: "Overwater chalets with red roofs and white walls on a white-railed walkway, above shallow water.",
+  },
+  "resort-bihing-type": {
+    bm: "Beberapa chalet kayu sederhana di atas tiang, dengan tangga turun ke air cetek yang jernih.",
+    en: "A few plain timber chalets on stilts, with a ladder down into clear shallow water.",
+  },
+  "resort-egang-type": {
+    bm: "Deretan chalet atas air ringkas berdinding papan putih, di atas air pirus cetek.",
+    en: "A row of simple overwater chalets clad in white boards, above shallow turquoise water.",
+  },
+  "resort-chalet-ac": {
+    bm: "Dalam sebuah chalet atas air berpenyaman udara: katil putih dan pintu kaca terbuka ke balkoni.",
+    en: "Inside an air-conditioned overwater chalet: a white bed and a glass door open onto the balcony.",
+  },
+  "resort-aminah-type": {
+    bm: "Chalet kayu atas air berbumbung rumbia dengan laluan papan sempit, di atas air pirus cetek.",
+    en: "Timber overwater chalets with thatched roofs and a narrow walkway, above shallow turquoise water.",
+  },
+  "resort-nusakuya-type": {
+    bm: "Resort atas air kecil dilihat dari laut: bangunan utama berveranda dan beberapa chalet di atas tiang.",
+    en: "A small overwater resort seen from the sea: a main building with a veranda and a few chalets on stilts.",
+  },
+  "resort-borneodivers-type": {
+    bm: "Jeti kayu panjang menganjur dari pantai pasir putih berpokok kelapa, dengan bot selam di hujungnya.",
+    en: "A long timber jetty out from a white sand beach lined with palms, a dive boat tied at the end.",
+  },
+  "resort-town-type": {
+    bm: "Jeti bandar Semporna dengan deretan bot fiber kecil bertambat di kedua-dua belah.",
+    en: "The Semporna town pier with rows of small fibreglass boats moored on both sides.",
+  },
+};
+
+const resortCards = RESORTS.map((r) => ({
   resort: r,
   tile: TILES.find((t) => t.id === REEL_BY_SLUG[r.slug]) ?? null,
-  still: FALLBACK_STILLS[i % FALLBACK_STILLS.length],
+  plate: PLATE_BY_SLUG[r.slug] ?? null,
   from: fromPrice(r),
 }));
 
@@ -111,44 +209,47 @@ const c = {
     title: "Pakej Pulau Semporna, Sabah",
     desc: "Pakej resort, lawatan harian pulau dan selam di Semporna, Sabah. Harga penuh disenaraikan. Hubungi kami di WhatsApp untuk pengesahan tempahan.",
 
-    heroEyebrow: `Semporna · Sabah · ${COMPANY.licenceLabel}`,
-    h1: "Kami bawa anda ke pulau",
-    heroLead: "Resort atas air, lawatan harian dan selam di Laut Sulawesi.",
-    scroll: "Tatal",
+    heroEyebrow: "Semporna · Sabah",
+    h1: "We bring you to paradise",
+    heroLead: "Percutian resort, lawatan harian dan selam skuba di perairan Semporna.",
+    scroll: "Teruskan",
     playLabel: "Main semula video latar",
     pauseLabel: "Hentikan video latar",
 
     visionEyebrow: "Falsafah",
     visionTitle: "Perjalanan bermula di jeti yang sama, tetapi tiada dua perjalanan yang serupa.",
     visionLead:
-      "Kami operator marin berlesen di Semporna, Sabah. Kami susun penginapan resort atas air, lawatan harian ke Tun Sakaran dan Mabul, serta kursus selam PADI — semuanya bertolak dari jeti bandar Semporna. Harga penuh ada di laman ini. Tiada tempahan dalam talian: setiap pertanyaan pergi terus kepada kami di WhatsApp.",
+      "Kami operator marin di Semporna, Sabah. Kami uruskan penginapan resort atas air, lawatan harian ke Tun Sakaran dan Mabul, dan kursus selam PADI. Semuanya bertolak dari jeti bandar Semporna. Harga penuh ada di laman ini, jadi anda boleh banding dahulu sebelum bertanya. Tiada butang tempahan di sini. Anda bercakap terus dengan kami di WhatsApp.",
     visionCta: "Tentang kami",
-    visionImgCap: "Perkampungan atas air di Taman Marin Tun Sakaran.",
+    visionImgCap: "Imej dijana. Jeti bandar Semporna pada awal pagi.",
+    visionImgAlt: "Jeti kayu panjang di atas air tenang pada awal pagi, bot kecil bertambat di kedua-dua belah, beg dan fin snorkeling di atas dek.",
 
     resortsEyebrow: "Resort",
     resortsTitle: "Resort",
     resortsSub: `${RESORTS.length} pilihan penginapan. Dari rumah atas air ke pakej bandar.`,
     resortsMore: "Bandingkan semua resort",
+    resortsNote: "Sebahagian kad menunjukkan imej dijana bagi jenis penginapan, bukan foto bangunan resort itu. Minta gambar semasa resort pilihan anda melalui WhatsApp.",
     from: "Dari",
     perPerson: "seorang",
 
     pkgEyebrow: "Pakej & harga",
     pkgTitle: "Bandingkan setiap resort, sebelah menyebelah.",
     pkgLead:
-      "Harga setiap orang, mengikut tempoh menginap. Semua pakej termasuk penginapan, makan, dan pengangkutan lapangan terbang serta bot. Ketersediaan atas permintaan.",
+      "Harga di bawah ialah harga seorang, mengikut berapa malam anda tinggal. Setiap pakej termasuk penginapan, makan, dan pengangkutan lapangan terbang serta bot. Ketersediaan atas permintaan.",
 
     diveEyebrow: "Selam & Sipadan",
     diveTitle: "Turun ke tebing.",
     diveLead:
-      "Selam skuba, pakej Sipadan, dan sijil PADI Open Water serta Advanced Open Water. Sipadan ialah kawasan dilindungi — permit ditetapkan oleh pihak berkuasa taman. Tempoh kursus adalah anggaran perancangan, bukan jaminan.",
+      "Selam skuba, pakej Sipadan, dan sijil PADI Open Water serta Advanced Open Water. Sipadan ialah kawasan dilindungi. Permit ditetapkan oleh pihak berkuasa taman, bukan oleh kami. Tempoh kursus di sini ialah anggaran untuk merancang, bukan jaminan.",
     diveCta: "Tanya tentang Sipadan",
     diveLink: "Semua pakej selam",
 
     tripEyebrow: "Lawatan harian",
     tripTitle: "Empat laluan, satu hari, keluar dari jeti Semporna.",
     tripLead:
-      "Bot, makan tengah hari, pemandu, bayaran jeti dan set snorkeling termasuk pada setiap laluan. Sewa jaket keselamatan berasingan.",
+      "Setiap laluan termasuk bot, makan tengah hari, pemandu, bayaran jeti dan set snorkeling. Jaket keselamatan disewa berasingan.",
     tripLink: "Semua lawatan harian",
+    tripImgAlt: "Tetamu berjaket keselamatan oren duduk di tepi bot kecil, memandang ke arah pulau hijau merentasi air pirus.",
     tripPhotoEyebrow: "Foto perjalanan",
     tripPhotoTitle: "Rakaman sebenar dari perjalanan kami",
     tripPhotoLead:
@@ -161,13 +262,12 @@ const c = {
     teaserEyebrow: "Semporna",
     teaserTitle: "Laut ini tidak sama pada mana-mana dua hari.",
     teaserLead: "Beritahu kami bila anda mahu datang, dan kami susun perjalanannya.",
-    teaserMarquee: "Terokai Semporna",
     teaserCta: "Rancang perjalanan",
 
     planEyebrow: "Rancang perjalanan",
     planTitle: "Pilih pakej dalam tiga soalan.",
     planLead:
-      "Jawab tiga soalan — kami tunjukkan senarai pendek dan sediakan mesej WhatsApp yang sudah lengkap dengan kod pakej anda.",
+      "Jawab tiga soalan. Kami tunjukkan senarai pendek, dan siapkan mesej WhatsApp yang sudah ada kod pakej anda di dalamnya.",
     planSteps: [
       "Siapa yang pergi — keluarga, kumpulan, atau penyelam sertifikasi?",
       "Berapa malam — 2H1M, 3H2M, atau 4H3M?",
@@ -183,9 +283,9 @@ const c = {
     title: "Semporna Island Packages, Sabah",
     desc: "Resort packages, island day trips and diving in Semporna, Sabah. Full prices listed. Contact us on WhatsApp to confirm a booking.",
 
-    heroEyebrow: `Semporna · Sabah · ${COMPANY.licenceLabel}`,
-    h1: "We bring you to the islands",
-    heroLead: "Overwater resorts, island day trips and diving in the Celebes Sea.",
+    heroEyebrow: "Semporna · Sabah",
+    h1: "We bring you to paradise",
+    heroLead: "Resort holidays, day trips and diving in the Semporna sea.",
     scroll: "Scroll",
     playLabel: "Play the background video",
     pauseLabel: "Pause the background video",
@@ -193,34 +293,37 @@ const c = {
     visionEyebrow: "Philosophy",
     visionTitle: "Every trip leaves from the same jetty, and no two of them are the same.",
     visionLead:
-      "We are a licensed marine operator in Semporna, Sabah. We arrange overwater resort stays, day trips to Tun Sakaran and Mabul, and PADI dive courses — all of it leaving from the Semporna town jetty. Full prices are on this site. There is no online checkout: every enquiry goes straight to us on WhatsApp.",
+      "We are a marine operator in Semporna, Sabah. We arrange overwater resort stays, day trips to Tun Sakaran and Mabul, and PADI dive courses. All of them leave from the Semporna town jetty. Full prices are on this site, so you can compare before you ask. There is no booking button here. You talk to us directly on WhatsApp.",
     visionCta: "About us",
-    visionImgCap: "A stilt village in the Tun Sakaran Marine Park.",
+    visionImgCap: "Generated image. The Semporna town jetty at first light.",
+    visionImgAlt: "A long timber jetty over calm water at first light, small boats tied along both sides, bags and snorkelling fins on the deck.",
 
     resortsEyebrow: "Resorts",
     resortsTitle: "Resorts",
     resortsSub: `${RESORTS.length} places to stay. From overwater houses to a town package.`,
     resortsMore: "Compare every resort",
+    resortsNote: "Some cards show a generated image of the type of stay, not a photograph of that resort building. Ask for current photos of your chosen resort on WhatsApp.",
     from: "From",
     perPerson: "per person",
 
     pkgEyebrow: "Packages & prices",
     pkgTitle: "Compare every resort, side by side.",
     pkgLead:
-      "Prices are per person, by length of stay. Every package includes accommodation, meals, airport transport and boat transport. Availability is on request.",
+      "The prices below are per person, by how many nights you stay. Every package includes accommodation, meals, airport transport and boat transport. Availability is on request.",
 
     diveEyebrow: "Diving & Sipadan",
     diveTitle: "Down to the wall.",
     diveLead:
-      "Scuba diving, Sipadan packages, and PADI Open Water and Advanced Open Water certification. Sipadan is a protected site — permits are set by the park authority. Course length is a planning estimate, not a guarantee.",
+      "Scuba diving, Sipadan packages, and PADI Open Water and Advanced Open Water certification. Sipadan is a protected site. Permits are set by the park authority, not by us. The course lengths here are planning estimates, not a guarantee.",
     diveCta: "Ask about Sipadan",
     diveLink: "All diving packages",
 
     tripEyebrow: "Day trips",
     tripTitle: "Four routes, one day, out from the Semporna jetty.",
     tripLead:
-      "Boat, lunch, guide, jetty fee and a snorkelling set are included on every route. The life jacket is rented separately.",
+      "Every route includes the boat, lunch, a guide, the jetty fee and a snorkelling set. The life jacket is rented separately.",
     tripLink: "All day trips",
+    tripImgAlt: "Guests in orange life jackets sitting along the side of a small boat, looking ahead to green islands across turquoise water.",
     tripPhotoEyebrow: "Trip photos",
     tripPhotoTitle: "Real frames from our own trips",
     tripPhotoLead:
@@ -233,13 +336,12 @@ const c = {
     teaserEyebrow: "Semporna",
     teaserTitle: "This sea is never the same on any two days.",
     teaserLead: "Tell us when you want to come, and we will shape the trip around it.",
-    teaserMarquee: "Explore Semporna",
     teaserCta: "Plan your trip",
 
     planEyebrow: "Plan your trip",
     planTitle: "Pick a package in three questions.",
     planLead:
-      "Answer three questions — we show a short list and prepare a WhatsApp message already filled in with your package codes.",
+      "Answer three questions. We show you a short list, and prepare a WhatsApp message with your package codes already in it.",
     planSteps: [
       "Who is travelling — a family, a group, or certified divers?",
       "How many nights — 2D1N, 3D2N, or 4D3N?",
@@ -272,30 +374,32 @@ const c = {
     pauseLabel={c.pauseLabel}
   />
 
-  {/* ---- 02 · Vision. Theme 1, light. -------------------------------- */}
-  <section class="band" id="after-hero" data-theme-section="1">
-    <div class="rail">
-      <div class="split">
-        <div>
-          <p class="eyebrow-b">{c.visionEyebrow}</p>
-          <Reveal as="h2" text={c.visionTitle} class="title-b title-b--lg" />
-          <p class="lead-b">{c.visionLead}</p>
-          <p class="vision__cta">
-            <a class="link-b" href={href("about", lang)}>{c.visionCta}</a>
-          </p>
-        </div>
-        <figure class="vision__fig">
-          <Img
-            slot="cm-stilt-lagoon"
-            alt={creditAlt("cm-stilt-lagoon", lang)}
-            sizes="(min-width: 900px) 46vw, 92vw"
-            ratio="3 / 4"
-          />
-          <figcaption class="cap-b">{c.visionImgCap}</figcaption>
-        </figure>
-      </div>
+  {/* ---- 02 · Vision. Theme 1, light. -------------------------------
+         Teaser module 1 of 3 (image left). The text column stays put while the
+         image slides inside its frame and grows from 80% into place. The three
+         modules alternate left / right / centred, as the reference's do. ---- */}
+  <TeaserModule
+    variant="left"
+    theme="1"
+    id="after-hero"
+    display
+    eyebrow={c.visionEyebrow}
+    heading={c.visionTitle}
+    lead={c.visionLead}
+    href={href("about", lang)}
+    cta={c.visionCta}
+  >
+    {/* Wrapped in a div because Img's own prop is called `slot` and would
+        collide with Astro's named-slot attribute. */}
+    <div slot="media">
+      <Img
+        slot="home-jetty"
+        alt={c.visionImgAlt}
+        sizes="(min-width: 900px) 44vw, 92vw"
+      />
     </div>
-  </section>
+    <Fragment slot="caption">{c.visionImgCap}</Fragment>
+  </TeaserModule>
 
   {/* ---- 03 · Resorts, as a drag gallery. Theme 1, light. ------------ */}
   <section class="band band--tight" data-theme-section="1">
@@ -307,12 +411,12 @@ const c = {
 
     <div class="resorts__strip">
       <DragGallery lang={lang} id="resort-strip" label={c.resortsTitle}>
-        {resortCards.map(({ resort, tile, still, from }) => (
+        {resortCards.map(({ resort, tile, plate, from }) => (
           <a class="rcard" href={resortDetailPath(resort.slug, lang)}>
             <div class="rcard__media">
               {tile
                 ? <VideoTile tile={tile} lang={lang} showLabel={false} ratio="3 / 4" />
-                : <Img slot={still} alt={creditAlt(still, lang)} sizes="(min-width: 900px) 26vw, 72vw" ratio="3 / 4" />}
+                : plate && <Img slot={plate} alt={PLATE_ALT[plate][lang]} sizes="(min-width: 900px) 26vw, 72vw" ratio="3 / 4" />}
             </div>
             <p class="rcard__name">{resort.name}</p>
             <p class="rcard__room">{resort.room}</p>
@@ -327,6 +431,7 @@ const c = {
     </div>
 
     <div class="rail resorts__more">
+      <p class="resorts__note">{c.resortsNote}</p>
       <a class="link-b" href={href("resorts", lang)}>{c.resortsMore}</a>
     </div>
   </section>
@@ -348,7 +453,12 @@ const c = {
     </div>
   </section>
 
-  {/* ---- 05 · Diving & Sipadan. Theme 2, dark. Asymmetric grid. ------ */}
+  {/* ---- 05 · Diving & Sipadan. Theme 2, dark. Asymmetric grid. ------
+         The text column here was already sticky before the rebuild, so this
+         section only needed the other half of the effect: the three stills
+         carry data-fx="scale" and grow 0.8 -> 1 as they arrive. The reels
+         between them deliberately do not — a grid where every cell grows at
+         once reads as the page zooming, not as the images arriving. ------ */}
   <section class="band" data-theme-section="2">
     <div class="rail">
       <div class="dive">
@@ -363,7 +473,7 @@ const c = {
         </div>
 
         <div class="dive__grid">
-          <figure class="dive__wide">
+          <figure class="dive__wide" data-fx="scale">
             <Img
               slot="cm-sipadan-wall"
               alt={creditAlt("cm-sipadan-wall", lang)}
@@ -374,7 +484,7 @@ const c = {
           {diveTiles.map((t) => (
             <VideoTile tile={t} lang={lang} showLabel={false} class="dive__tile" />
           ))}
-          <figure class="dive__tall">
+          <figure class="dive__tall" data-fx="scale">
             <Img
               slot="cm-turtle"
               alt={creditAlt("cm-turtle", lang)}
@@ -382,7 +492,7 @@ const c = {
               ratio="3 / 4"
             />
           </figure>
-          <figure class="dive__tall">
+          <figure class="dive__tall" data-fx="scale">
             <Img
               slot="cm-jackfish"
               alt={creditAlt("cm-jackfish", lang)}
@@ -395,43 +505,40 @@ const c = {
     </div>
   </section>
 
-  {/* ---- 06 · Day trips. Theme 1, light. ----------------------------- */}
-  <section class="band" data-theme-section="1">
-    <div class="rail">
-      <div class="split">
-        <div>
-          <p class="eyebrow-b">{c.tripEyebrow}</p>
-          <Reveal as="h2" text={c.tripTitle} class="title-b" />
-          <p class="lead-b">{c.tripLead}</p>
-          <ul class="trips">
-            {DAY_TRIPS.map((tr) => (
-              <li class="trip">
-                <span class="trip__where">
-                  <span class="trip__area">{tr.area[lang]}</span>
-                  <span class="trip__dest">{tr.destinations.join(" · ")}</span>
-                </span>
-                <span class="trip__price">
-                  <Gated value={tr.local} kind="price" blocker="B02" lang={lang} />
-                  <span class="trip__per">{c.perPerson}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p class="vision__cta">
-            <a class="link-b" href={href("dayTrips", lang)}>{c.tripLink}</a>
-          </p>
-        </div>
-        <figure class="vision__fig">
-          <Img
-            slot="cm-white-beach"
-            alt={creditAlt("cm-white-beach", lang)}
-            sizes="(min-width: 900px) 46vw, 92vw"
-            ratio="4 / 5"
-          />
-        </figure>
-      </div>
+  {/* ---- 06 · Day trips. Theme 1, light. -----------------------------
+         Teaser module 2 of 3 (image right). ------------------------------- */}
+  <TeaserModule
+    variant="right"
+    theme="1"
+    ratio="3 / 5"
+    eyebrow={c.tripEyebrow}
+    heading={c.tripTitle}
+    lead={c.tripLead}
+    href={href("dayTrips", lang)}
+    cta={c.tripLink}
+  >
+    <div slot="media">
+      <Img
+        slot="harian-boat"
+        alt={c.tripImgAlt}
+        sizes="(min-width: 900px) 44vw, 92vw"
+      />
     </div>
-  </section>
+    <ul class="trips">
+      {DAY_TRIPS.map((tr) => (
+        <li class="trip">
+          <span class="trip__where">
+            <span class="trip__area">{tr.area[lang]}</span>
+            <span class="trip__dest">{tr.destinations.join(" · ")}</span>
+          </span>
+          <span class="trip__price">
+            <Gated value={tr.local} kind="price" blocker="B02" lang={lang} />
+            <span class="trip__per">{c.perPerson}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  </TeaserModule>
 
   {/* ---- 06b · The seven cleared guest photographs, large. -----------
       CONTEXT.md §5: these frames render ONLY inside <GuestGallery>, which
@@ -466,36 +573,45 @@ const c = {
     </div>
   </section>
 
-  {/* ---- 08 · Fullscreen teaser with the marquee. Theme 2, dark. ----- */}
+  {/* ---- 08 · Fullscreen teaser. Theme 2, dark. --------------------- */}
   <FullscreenTeaser
     lang={lang}
     eyebrow={c.teaserEyebrow}
     title={c.teaserTitle}
     lead={c.teaserLead}
-    marquee={c.teaserMarquee}
     href={href("planner", lang)}
     cta={c.teaserCta}
   />
 
-  {/* ---- 09 · Trip shaper. Theme 1, light. --------------------------- */}
-  <section class="band" data-theme-section="1">
-    <div class="rail plan">
-      <p class="eyebrow-b">{c.planEyebrow}</p>
-      <Reveal as="h2" text={c.planTitle} class="title-b" />
-      <p class="lead-b">{c.planLead}</p>
-      <ol class="steps">
-        {c.planSteps.map((s, i) => (
-          <li class="steps__item">
-            <span class="steps__n" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-            <span class="steps__q">{s}</span>
-          </li>
-        ))}
-      </ol>
-      <p class="plan__cta">
-        <a class="link-b" href={href("planner", lang)}>{c.planLink}</a>
-      </p>
+  {/* ---- 09 · Trip shaper. Theme 1, light. ---------------------------
+         Teaser module 3 of 3 (centred). A wide 3:2 image, the text beneath it.
+         No sticky travel here — there is no taller column beside it to travel
+         inside, so the rule is dropped rather than left doing nothing. ----- */}
+  <TeaserModule
+    variant="centered"
+    theme="1"
+    eyebrow={c.planEyebrow}
+    heading={c.planTitle}
+    lead={c.planLead}
+    href={href("planner", lang)}
+    cta={c.planLink}
+  >
+    <div slot="media">
+      <Img
+        slot="cm-semporna-dusk"
+        alt={creditAlt("cm-semporna-dusk", lang)}
+        sizes="(min-width: 1200px) 88vw, 92vw"
+      />
     </div>
-  </section>
+    <ol class="steps steps--centered">
+      {c.planSteps.map((s, i) => (
+        <li class="steps__item">
+          <span class="steps__n" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+          <span class="steps__q">{s}</span>
+        </li>
+      ))}
+    </ol>
+  </TeaserModule>
 
   {/* ---- 10 · Master nav strip. Theme 3, sand. ----------------------- */}
   <section class="band band--tight" data-theme-section="3">
@@ -519,8 +635,6 @@ const c = {
 
 <style>
   /* ---- Vision + day trips: the 50/50 with a bleeding figure ---------- */
-  .vision__fig { margin: 0; }
-  .vision__cta { margin-top: clamp(2rem, 4vw, 3rem); }
 
   .cap-b {
     margin-top: 0.875rem;
@@ -534,6 +648,15 @@ const c = {
 
   /* ---- Resorts strip ------------------------------------------------ */
   .resorts__sub { margin-top: 1.25rem; }
+  /* Says in the page that a card can be a generated image of the type of stay.
+     CONTEXT.md §5 — the plates are only publishable because this line exists. */
+  .resorts__note {
+    max-width: 44rem;
+    margin: 0 0 1.5rem;
+    font-size: var(--text-caption);
+    line-height: 1.6;
+    color: var(--s-muted, var(--t-muted));
+  }
   .resorts__strip { margin-top: clamp(2.5rem, 5vw, 4rem); }
   .resorts__more { margin-top: 2.5rem; }
 
@@ -630,8 +753,10 @@ const c = {
   .trip__price { display: inline-flex; align-items: baseline; gap: 0.5rem; }
 
   /* ---- Trip shaper -------------------------------------------------- */
-  .plan { max-width: 52rem; }
   .steps { list-style: none; margin: clamp(2.5rem, 5vw, 3.5rem) 0 0; padding: 0; }
+  /* Inside the centred teaser module the block is centred but the rows are
+     not: a numbered list with ragged-centre rows is hard to scan. */
+  .steps--centered { text-align: left; max-width: 40rem; margin-inline: auto; }
   .steps__item {
     display: grid;
     grid-template-columns: 3.5rem 1fr;
@@ -650,7 +775,6 @@ const c = {
     font-variant-numeric: tabular-nums;
   }
   .steps__q { font-size: var(--text-lead); line-height: var(--lh-lead); }
-  .plan__cta { margin-top: clamp(2rem, 4vw, 3rem); }
 
   /* ---- Master nav strip --------------------------------------------- */
   .master {
